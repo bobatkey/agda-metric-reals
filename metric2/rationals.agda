@@ -16,7 +16,7 @@ module absolute {c ℓ}
   open IsDecTotalOrder isDecTotalOrder
      using (total; isPartialOrder; antisym)
      renaming (refl to ≤-refl; trans to ≤-trans; reflexive to ≤-reflexive)
-   open import Algebra.Properties.AbelianGroup (A)
+  open import Algebra.Properties.AbelianGroup (A)
 
   abs : ∣A∣ → ∣A∣
   abs x with total 0A x
