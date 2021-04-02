@@ -629,6 +629,27 @@ approximate y .*≤* h = y .closed h
 -- FIXME: closedness is now a consequence of this
 
 ------------------------------------------------------------------------------
+-- infima
+
+inf : (I : Set) → (I → ℝᵘ) → ℝᵘ
+inf I S .contains q = ∀ s → Σ[ i ∈ I ] (S i .contains (q qpos.+ s))
+inf I S .upper q≤r contains-q s =
+  let i , p = contains-q s in
+  i , S i .upper (qpos.+-mono-≤ q≤r qpos.≤-refl) p
+inf I S .closed {ε} h s =
+  let i , p = h (s /2) (s /2) in
+  i , S i .upper (qpos.≤-reflexive (qpos.≃-trans (qpos.+-assoc ε (s /2) (s /2)) (qpos.+-congʳ ε qpos.half+half))) p
+
+inf-lower : ∀ {I S} i → inf I S ≤ S i
+inf-lower {I}{S} i .*≤* {ε} Si∋ε s = i , S i .upper qpos.+-increasing Si∋ε
+
+inf-greatest : ∀ {I S x} → (∀ i → x ≤ S i) → x ≤ inf I S
+inf-greatest {I}{S}{x} h .*≤* {ε} infIS∋ε =
+  x .closed λ s →
+  let i , Si∋ε+s = infIS∋ε s in
+  h i .*≤* Si∋ε+s
+
+------------------------------------------------------------------------------
 {-
 sqrt : ℝᵘ → ℝᵘ
 sqrt x .contains q = x .contains (q qpos.* q)
