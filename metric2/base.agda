@@ -5,6 +5,7 @@ open import Relation.Binary using (IsEquivalence; Setoid)
 open import upper-reals hiding (isEquivalence)
 
 record MSpc : Set₁ where
+  no-eta-equality
   field
     Carrier  : Set
     dist     : Carrier → Carrier → ℝᵘ
@@ -29,6 +30,7 @@ record MSpc : Set₁ where
 
 -- non-expansive functions
 record _⇒_ (X Y : MSpc) : Set where
+  no-eta-equality
   private
     module X = MSpc X
     module Y = MSpc Y

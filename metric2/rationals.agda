@@ -104,10 +104,10 @@ module absolute {c ℓ}
   ... | inj₁ 0≤x = ≤-trans (switch2 0≤x) 0≤x
   ... | inj₂ x≤0 = ≤-refl
 
-  sub-add : ∀ {x y} → abs (x + y) ≤ (abs x + abs y)
-  sub-add {x}{y} with total 0A (x + y)
-  sub-add {x}{y} | inj₁ 0≤x+y = +-mono abs-inc abs-inc
-  sub-add {x}{y} | inj₂ x+y≤0 = ≤-trans (≤-reflexive (sym (⁻¹-∙-comm x y))) (+-mono abs-inc₂ abs-inc₂)
+  sub-add : ∀ x y → abs (x + y) ≤ (abs x + abs y)
+  sub-add x y with total 0A (x + y)
+  sub-add x y | inj₁ 0≤x+y = +-mono abs-inc abs-inc
+  sub-add x y | inj₂ x+y≤0 = ≤-trans (≤-reflexive (sym (⁻¹-∙-comm x y))) (+-mono abs-inc₂ abs-inc₂)
 
   -- must be an easier way than this...
   even : ∀ {x} → abs (- x) ≈ abs x
@@ -169,7 +169,22 @@ open _⇒_
             (ℚ.≃-trans (ℚ.+-congʳ (ℚ.- y) (ℚ.≃-sym (⁻¹-involutive x)))
                        (⁻¹-∙-comm y (ℚ.- x)))
 ℚspc .triangle {x}{y}{z} =
-  ≤-trans (rational-mono (ℚ.≤-trans (ℚ.≤-reflexive (abs-cong {x ℚ.- z}{(x ℚ.- y) ℚ.+ (y ℚ.- z)} {!!})) (sub-add {x ℚ.- y} {y ℚ.- z}))) {!!}
+  -- FIXME: tidy this up
+  ≤-trans (rational-mono (ℚ.≤-trans (ℚ.≤-reflexive (abs-cong {x ℚ.- z}{(x ℚ.- y) ℚ.+ (y ℚ.- z)} p)) (sub-add (x ℚ.- y) (y ℚ.- z))))
+    (≤-reflexive (≃-sym (rational-+ (abs (x ℚ.- y)) (abs (y ℚ.- z)) (non-negative {x ℚ.- y}) (non-negative {y ℚ.- z}))))
+  where open ℚ.≤-Reasoning
+        p : x ℚ.- z ℚ.≃ x ℚ.- y ℚ.+ (y ℚ.- z)
+        p = begin-equality
+              x ℚ.- z
+            ≈⟨ ℚ.+-congʳ x (ℚ.≃-sym (ℚ.+-identityˡ (ℚ.- z))) ⟩
+              x ℚ.+ (0ℚ ℚ.- z)
+            ≈⟨ ℚ.+-congʳ x (ℚ.+-congˡ (ℚ.- z) (ℚ.≃-sym (ℚ.+-inverseˡ y))) ⟩
+              x ℚ.+ ((ℚ.- y ℚ.+ y) ℚ.- z)
+            ≈⟨ ℚ.+-congʳ x (ℚ.+-assoc (ℚ.- y) y (ℚ.- z)) ⟩
+              x ℚ.+ (ℚ.- y ℚ.+ (y ℚ.- z))
+            ≈⟨ ℚ.≃-sym (ℚ.+-assoc x (ℚ.- y) (y ℚ.- z)) ⟩
+              x ℚ.- y ℚ.+ (y ℚ.- z)
+            ∎
 
 open import metric2.monoidal
 open import metric2.terminal
@@ -180,12 +195,33 @@ const q .non-expansive = ℚspc .refl {q}
 
 add : (ℚspc ⊗ ℚspc) ⇒ ℚspc
 add .fun (a , b) = a ℚ.+ b
-add .non-expansive = {!!}
+add .non-expansive {a₁ , b₁}{a₂ , b₂} =
+  begin
+    rational (abs (a₁ ℚ.+ b₁ ℚ.- (a₂ ℚ.+ b₂)))
+      ≈⟨ rational-cong (abs-cong (ℚ.+-congʳ (a₁ ℚ.+ b₁) (ℚ.≃-sym (⁻¹-∙-comm a₂ b₂)))) ⟩
+    rational (abs (a₁ ℚ.+ b₁ ℚ.+ (ℚ.- a₂ ℚ.- b₂)))
+      ≈⟨ rational-cong (abs-cong (ℚ-interchange a₁ b₁ (ℚ.- a₂) (ℚ.- b₂))) ⟩
+    rational (abs ((a₁ ℚ.- a₂) ℚ.+ (b₁ ℚ.- b₂)))
+      ≤⟨ rational-mono (sub-add (a₁ ℚ.- a₂) (b₁ ℚ.- b₂)) ⟩
+    rational (abs (a₁ ℚ.- a₂) ℚ.+ abs (b₁ ℚ.- b₂))
+      ≈⟨ ≃-sym (rational-+ (abs (a₁ ℚ.- a₂)) (abs (b₁ ℚ.- b₂)) (non-negative {a₁ ℚ.- a₂}) (non-negative {b₁ ℚ.- b₂})) ⟩
+    dist (ℚspc ⊗ ℚspc) (a₁ , b₁) (a₂ , b₂)
+  ∎
+  where open ≤-Reasoning
+        open import Algebra.Properties.AbelianGroup (ℚ.+-0-abelianGroup)
 
 negate : ℚspc ⇒ ℚspc
 negate .fun a = ℚ.- a
 negate .non-expansive {a}{b} =
-  rational-mono (ℚ.≤-reflexive (abs-cong {ℚ.- a ℚ.- ℚ.- b} {a ℚ.- b} {!!}))
+  begin
+    rational (abs (ℚ.- a ℚ.- ℚ.- b))
+  ≈⟨ rational-cong (abs-cong (⁻¹-∙-comm a (ℚ.- b))) ⟩
+    rational (abs (ℚ.- (a ℚ.- b)))
+  ≈⟨ rational-cong (even {a ℚ.- b}) ⟩
+    dist ℚspc a b
+  ∎
+  where open ≤-Reasoning
+        open import Algebra.Properties.AbelianGroup (ℚ.+-0-abelianGroup)
 
 -- this gives a quantitative abelian group
 --    x :2 ℚspc |- x + (- x) ≡ 0   (assuming weakening)
@@ -194,31 +230,35 @@ negate .non-expansive {a}{b} =
 open import metric2.scaling
 open import qpos as ℚ⁺ using (ℚ⁺)
 
--- FIXME: make this work for any q : ℚ
+-- FIXME: make this work for any q : ℚ; need scaling to work for non-negative rationals
+{-
 ℚ-scale : (q : ℚ⁺) → ![ q ] ℚspc ⇒ ℚspc
 ℚ-scale q .fun a = ℚ⁺.fog q ℚ.* a
-ℚ-scale q .non-expansive = {!!}
+ℚ-scale q .non-expansive {a}{b} =
+  begin
+    rational (abs (ℚ⁺.fog q ℚ.* a ℚ.- ℚ⁺.fog q ℚ.* b))
+  ≈⟨ {!!} ⟩
+    rational (abs (ℚ⁺.fog q ℚ.* a ℚ.+ ℚ⁺.fog q ℚ.* (ℚ.- b)))
+  ≈⟨ {!!} ⟩
+    rational (abs (ℚ⁺.fog q ℚ.* (a ℚ.- b)))
+  ≈⟨ {!!} ⟩
+    rational (ℚ⁺.fog q ℚ.* abs (a ℚ.- b))
+  ≈⟨ {!!} ⟩
+    scale q (rational (abs (a ℚ.- b)))
+  ≈⟨ ≃-refl ⟩
+    scale q (dist ℚspc a b)
+  ≈⟨ ≃-refl ⟩
+    dist (![ q ] ℚspc) a b
+  ∎
+  where open ≤-Reasoning
+-}
 
 {-
+-- FIXME: the following need sub-ranges of ℚspc to be defined
+
 mul : ∀ a → (ℚspc[ - a , a ] ⊗ ![ abs a ] ℚspc) ⇒ ℚspc -- FIXME: output bound?
 mul = ?
 
 recip : ∀ a → ![ a ] ℚspc[ a ⟩ ⇒ ℚspc
 recip = ?
--}
-
-------------------------------------------------------------------------------
--- the real numbers as the completion of the rationals
-{-
-open import metric2.completion renaming (map to 𝒞-map)
-open metric2.base.category
-
-ℝspc : MSpc
-ℝspc = 𝒞 ℚspc
-
-ℝ : Set
-ℝ = ℝspc .Carrier
-
-addℝ : (ℝspc ⊗ ℝspc) ⇒ ℝspc
-addℝ = 𝒞-map add ∘ {!monoidal-⊗!}
 -}
