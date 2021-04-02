@@ -1,7 +1,7 @@
 module upper-reals where
 
 open import Level using (0ℓ; suc)
-open import Algebra
+open import Algebra using (CommutativeSemigroup; Commutative; Congruent₂; LeftIdentity; RightIdentity; Associative)
 open import Data.Unit using (⊤; tt)
 open import Data.Product using (Σ-syntax; _×_; proj₁; proj₂; _,_)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
@@ -11,7 +11,7 @@ import Data.Rational.Unnormalised.Properties as ℚ
 open import Relation.Nullary using (yes; no; ¬_)
 import Relation.Nullary.Decidable as Dec
 import Data.Rational.Unnormalised.Solver as ℚSolver
-open import Relation.Binary
+open import Relation.Binary using (Antisymmetric; IsEquivalence; IsPreorder; IsPartialOrder; Poset; _Preserves₂_⟶_⟶_)
 
 import qpos
 open import qpos as ℚ⁺ using (ℚ⁺; _/2; 1/_)
