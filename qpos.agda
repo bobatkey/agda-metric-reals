@@ -368,3 +368,6 @@ nn+pos q r 0≤q .positive =
   ℚ.positive (ℚ.≤-<-trans (ℚ.≤-reflexive (ℚ.≃-sym (ℚ.+-identityʳ 0ℚ)))
              (ℚ.≤-<-trans (ℚ.+-monoˡ-≤ 0ℚ 0≤q)
                           (ℚ.+-monoʳ-< q (ℚ.positive⁻¹ (r .positive)))))
+
+q≤nn+pos : ∀ q (r : ℚ⁺) → q ℚ.≤ q ℚ.+ fog r
+q≤nn+pos q r = ℚ.p≤p+q (ℚ.nonNegative (fog-nonneg {r}))

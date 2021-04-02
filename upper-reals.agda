@@ -37,6 +37,8 @@ module interchange {c ℓ} (G : CommutativeSemigroup c ℓ)  where
     ∎
 
 open interchange (qpos.+-commutativeSemigroup) renaming (interchange to ℚ⁺-interchange) public
+open interchange (record
+                    { isCommutativeSemigroup = record { isSemigroup = ℚ.+-isSemigroup ; comm = ℚ.+-comm } }) renaming (interchange to ℚ-interchange) public
 
 -- an upper real is a set of upper bounds on a real number
 record ℝᵘ : Set₁ where
@@ -298,15 +300,25 @@ open interchange (record
 rational-0 : rational 0ℚ ≤ 0ℝ
 rational-0 .*≤* {q} tt = ℚ⁺.fog-nonneg {q}
 
-{-
-rational-+2 : ∀ q r → 0ℚ ℚ.≤ q → 0ℚ ℚ.≤ r → (rational q + rational r) ≃ rational (q ℚ.+ r)
-rational-+2 q r 0≤q 0≤r .proj₁ .*≤* {ε} q+r≤ε s =
+rational-+ : ∀ q r → 0ℚ ℚ.≤ q → 0ℚ ℚ.≤ r → (rational q + rational r) ≃ rational (q ℚ.+ r)
+rational-+ q r 0≤q 0≤r .proj₁ .*≤* {ε} q+r≤ε s =
   qpos.nn+pos q (s /2) 0≤q ,
   qpos.nn+pos r (s /2) 0≤r ,
-  qpos.r≤r {!!} ,
-  {!!} ,
-  {!!}
-rational-+2 q r 0≤q 0≤r .proj₂ .*≤* {ε} q+r∋ε =
+  qpos.r≤r (begin
+              q ℚ.+ qpos.fog (s /2) ℚ.+ (r ℚ.+ qpos.fog (s /2))
+            ≈⟨ ℚ-interchange q (qpos.fog (s /2)) r (qpos.fog (s /2)) ⟩
+              (q ℚ.+ r) ℚ.+ (qpos.fog (s /2) ℚ.+ qpos.fog (s /2))
+            ≈⟨ ℚ.+-congʳ (q ℚ.+ r) (ℚ.≃-sym (qpos.+-fog (s /2) (s /2))) ⟩
+              (q ℚ.+ r) ℚ.+ qpos.fog (s /2 ℚ⁺.+ s /2)
+            ≤⟨ ℚ.+-mono-≤ q+r≤ε (qpos.fog-mono (qpos.≤-reflexive (qpos.half+half {s}))) ⟩
+              qpos.fog ε ℚ.+ qpos.fog s
+            ≈⟨ qpos.+-fog ε s ⟩
+              qpos.fog (ε ℚ⁺.+ s)
+           ∎) ,
+  qpos.q≤nn+pos q (s /2) ,
+  qpos.q≤nn+pos r (s /2)
+  where open ℚ.≤-Reasoning
+rational-+ q r 0≤q 0≤r .proj₂ .*≤* {ε} q+r∋ε =
   rational (q ℚ.+ r) .closed {ε} λ s →
   let ε₁ , ε₂ , ε₁+ε₂≤ε+s , q≤ε₁ , r≤ε₂ = q+r∋ε s in
   begin
@@ -319,18 +331,19 @@ rational-+2 q r 0≤q 0≤r .proj₂ .*≤* {ε} q+r∋ε =
     qpos.fog (ε qpos.+ s)
   ∎
   where open ℚ.≤-Reasoning
--}
 
-rational-+ : ∀ {q r} → (rational+ q + rational+ r) ≃ rational+ (q ℚ⁺.+ r)
-rational-+ {q}{r} .proj₁ .*≤* {q'} q+r≤q' s =
-  q , r ,
-  qpos.≤-trans (qpos.r≤r q+r≤q') qpos.+-increasing ,
-  ℚ.≤-refl ,
-  ℚ.≤-refl
-rational-+ {q}{r} .proj₂ .*≤* {ε} q+r∋ε =
-  rational+ (q qpos.+ r) .closed {ε} λ s →
-  let ε₁ , ε₂ , ε₁+ε₂≤ε+s , q≤ε₁ , r≤ε₂ = q+r∋ε s in
-  ℚ.≤-trans (ℚ.+-mono-≤ q≤ε₁ r≤ε₂) (qpos.fog-mono ε₁+ε₂≤ε+s)
+rational⁺-+ : ∀ q r → (rational+ q + rational+ r) ≃ rational+ (q ℚ⁺.+ r)
+rational⁺-+ q r =
+  begin-equality
+    rational+ q + rational+ r
+  ≈⟨ ≃-refl ⟩
+    rational (ℚ⁺.fog q) + rational (ℚ⁺.fog r)
+  ≈⟨ rational-+ (qpos.fog q) (qpos.fog r) (qpos.fog-nonneg {q}) (qpos.fog-nonneg {r}) ⟩
+    rational (ℚ⁺.fog q ℚ.+ ℚ⁺.fog r)
+  ≈⟨ rational-cong (qpos.+-fog q r) ⟩
+    rational+ (q ℚ⁺.+ r)
+  ∎
+  where open ≤-Reasoning
 
 -- TODO:
 -- *-assoc
