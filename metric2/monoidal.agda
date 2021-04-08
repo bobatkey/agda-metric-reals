@@ -1,12 +1,16 @@
+{-# OPTIONS --without-K --safe #-}
+
 module metric2.monoidal where
 
 open import Data.Product using (_×_; _,_)
+open import Data.Unit using (tt)
 open import metric2.base
 open import metric2.terminal
 open import upper-reals
 
 open MSpc
 open _⇒_
+open _≈f_
 
 _⊗_ : MSpc → MSpc → MSpc
 (X ⊗ Y) .Carrier =
@@ -51,8 +55,6 @@ _⊗f_ : ∀ {X X' Y Y'} → X ⇒ X' → Y ⇒ Y' → (X ⊗ Y) ⇒ (X' ⊗ Y')
 (f ⊗f g) .fun (x , y) = f .fun x , g .fun y
 (f ⊗f g) .non-expansive {x₁ , y₁} {x₂ , y₂} = +-mono-≤ (f .non-expansive) (g .non-expansive)
 
-open _≈f_
-
 ⊗f-cong : ∀ {X X' Y Y'} {f₁ f₂ : X ⇒ X'}{g₁ g₂ : Y ⇒ Y'} →
   f₁ ≈f f₂ → g₁ ≈f g₂ → (f₁ ⊗f g₁) ≈f (f₂ ⊗f g₂)
 ⊗f-cong f₁≈f₂ g₁≈g₂ .f≈f (x , y) =
@@ -60,13 +62,13 @@ open _≈f_
 
 ------------------------------------------------------------------------------
 -- Associativity
-assoc : ∀ {X Y Z} → (X ⊗ (Y ⊗ Z)) ⇒ ((X ⊗ Y) ⊗ Z)
-assoc .fun (x , (y , z)) = ((x , y) , z)
-assoc .non-expansive = ≤-reflexive (+-assoc _ _ _)
+⊗-assoc : ∀ {X Y Z} → (X ⊗ (Y ⊗ Z)) ⇒ ((X ⊗ Y) ⊗ Z)
+⊗-assoc .fun (x , (y , z)) = ((x , y) , z)
+⊗-assoc .non-expansive = ≤-reflexive (+-assoc _ _ _)
 
-assoc⁻¹ : ∀ {X Y Z} → ((X ⊗ Y) ⊗ Z) ⇒ (X ⊗ (Y ⊗ Z))
-assoc⁻¹ .fun ((x , y) , z) = (x , (y , z))
-assoc⁻¹ .non-expansive = ≤-reflexive (≃-sym (+-assoc _ _ _))
+⊗-assoc⁻¹ : ∀ {X Y Z} → ((X ⊗ Y) ⊗ Z) ⇒ (X ⊗ (Y ⊗ Z))
+⊗-assoc⁻¹ .fun ((x , y) , z) = (x , (y , z))
+⊗-assoc⁻¹ .non-expansive = ≤-reflexive (≃-sym (+-assoc _ _ _))
 
 -- FIXME: mutually inverse
 
@@ -85,7 +87,9 @@ left-unit : ∀ {X} → (⊤ₘ ⊗ X) ⇒ X
 left-unit .fun (tt , x) = x
 left-unit .non-expansive = ≤-reflexive (≃-sym (+-identityˡ _))
 
--- FIXME: inverse
+left-unit⁻¹ : ∀ {X} → X ⇒ (⊤ₘ ⊗ X)
+left-unit⁻¹ .fun x = (tt , x)
+left-unit⁻¹ .non-expansive = ≤-reflexive (+-identityˡ _)
 
 -- FIXME: define right-unit
 

@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 module metric2.base where
 
 open import Level using (0ℓ)
@@ -64,6 +66,8 @@ module category where
   id .fun x = x
   id .non-expansive = ≤-refl
 
+  infixr 9 _∘_
+
   _∘_ : ∀ {X Y Z} → Y ⇒ Z → X ⇒ Y → X ⇒ Z
   (f ∘ g) .fun x = f .fun (g .fun x)
   (f ∘ g) .non-expansive = ≤-trans (f .non-expansive) (g .non-expansive)
@@ -81,5 +85,5 @@ module category where
   identityʳ {X}{Y} f .f≈f a = Y .refl
 
   assoc : ∀ {W X Y Z}(f : Y ⇒ Z)(g : X ⇒ Y)(h : W ⇒ X) →
-          (f ∘ (g ∘ h)) ≈f ((f ∘ g) ∘ h)
+          (f ∘ g ∘ h) ≈f ((f ∘ g) ∘ h)
   assoc {Z = Z} f g h .f≈f w = Z .refl

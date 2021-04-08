@@ -1,7 +1,9 @@
+{-# OPTIONS --without-K --safe #-}
+
 module upper-reals where
 
 open import Level using (0ℓ; suc)
-open import Algebra using (CommutativeSemigroup; Commutative; Congruent₂; LeftIdentity; RightIdentity; Associative)
+open import Algebra using (CommutativeSemigroup; Commutative; Congruent₂; LeftIdentity; RightIdentity; Associative; LeftZero)
 open import Data.Unit using (⊤; tt)
 open import Data.Product using (Σ-syntax; _×_; proj₁; proj₂; _,_)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
@@ -9,7 +11,6 @@ open import Data.Empty using (⊥)
 open import Data.Rational.Unnormalised as ℚ using () renaming (ℚᵘ to ℚ; 0ℚᵘ to 0ℚ; 1ℚᵘ to 1ℚ)
 import Data.Rational.Unnormalised.Properties as ℚ
 open import Relation.Nullary using (yes; no; ¬_)
-import Relation.Nullary.Decidable as Dec
 import Data.Rational.Unnormalised.Solver as ℚSolver
 open import Relation.Binary using (Antisymmetric; IsEquivalence; IsPreorder; IsPartialOrder; Poset; _Preserves₂_⟶_⟶_)
 
@@ -297,8 +298,9 @@ open binary-op (ℚ⁺._*_) (ℚ⁺.*-comm)
 open interchange (record
                     { isCommutativeSemigroup = record { isSemigroup = record { isMagma = record { isEquivalence = isEquivalence ; ∙-cong = +-cong } ; assoc = +-assoc } ; comm = +-comm } }) public
 
-rational-0 : rational 0ℚ ≤ 0ℝ
-rational-0 .*≤* {q} tt = ℚ⁺.fog-nonneg {q}
+rational-0 : rational 0ℚ ≃ 0ℝ
+rational-0 .proj₁ .*≤* {q} tt = ℚ⁺.fog-nonneg {q}
+rational-0 .proj₂ = 0-least _
 
 rational-+ : ∀ q r → 0ℚ ℚ.≤ q → 0ℚ ℚ.≤ r → (rational q + rational r) ≃ rational (q ℚ.+ r)
 rational-+ q r 0≤q 0≤r .proj₁ .*≤* {ε} q+r≤ε s =
@@ -332,6 +334,37 @@ rational-+ q r 0≤q 0≤r .proj₂ .*≤* {ε} q+r∋ε =
   ∎
   where open ℚ.≤-Reasoning
 
+-- FIXME: need this to work for all non-negative rationals
+rational⁺-* : ∀ q r → (rational+ q * rational+ r) ≃ rational+ (q ℚ⁺.* r)
+rational⁺-* q r .proj₁ .*≤* {ε} qr≤ε s =
+  q ,
+  r ,
+  (begin
+    q qpos.* r
+  ≤⟨ qpos.r≤r qr≤ε ⟩
+    ε
+  ≤⟨ qpos.+-increasing ⟩
+    ε qpos.+ s
+  ∎) ,
+  ℚ.≤-refl ,
+  ℚ.≤-refl
+  where open ℚ⁺.≤-Reasoning
+rational⁺-* q r .proj₂ .*≤* {ε} qr∋ε =
+  rational+ (q ℚ⁺.* r) .closed {ε} λ s →
+  let ε₁ , ε₂ , ε₁ε₂≤ε+s , q≤ε₁ , r≤ε₂ = qr∋ε s in
+  begin
+    qpos.fog q ℚ.* qpos.fog r
+  ≤⟨ ℚ.*-monoʳ-≤-pos {qpos.fog q} (ℚ.positive (qpos.fog-positive {q})) r≤ε₂ ⟩
+    qpos.fog q ℚ.* qpos.fog ε₂
+  ≤⟨ ℚ.*-monoˡ-≤-pos (ℚ.positive (qpos.fog-positive {ε₂})) q≤ε₁ ⟩
+    qpos.fog ε₁ ℚ.* qpos.fog ε₂
+  ≈⟨ ℚ.≃-sym (qpos.*-fog ε₁ ε₂) ⟩
+    qpos.fog (ε₁ ℚ⁺.* ε₂)
+  ≤⟨ qpos.fog-mono ε₁ε₂≤ε+s ⟩
+    qpos.fog (ε ℚ⁺.+ s)
+  ∎
+  where open ℚ.≤-Reasoning
+
 rational⁺-+ : ∀ q r → (rational+ q + rational+ r) ≃ rational+ (q ℚ⁺.+ r)
 rational⁺-+ q r =
   begin-equality
@@ -346,21 +379,196 @@ rational⁺-+ q r =
   where open ≤-Reasoning
 
 -- TODO:
--- *-assoc
 -- x + ∞ = ∞
 -- x * ∞ = ∞
 
--- FIXME: needs a max operation in qpos.agda
-{-
-*-distribʳ-+ℝ : _DistributesOverʳ_ _≃_ _*_ _+_
-*-distribʳ-+ℝ x y z =
-  (λ {q} y*x+z*x-q s →
-    let q₁ , q₂ , q₁+q₂≤q+s , y*x-q₁ , z*x-q₂ = y*x+z*x-q s in
-    let q₃ , q₄ , q₃*q₄≤q₁+s , y-q₃ , x-q₄ = y*x-q₁ s in
-    let q₅ , q₆ , q₅*q₆≤q₂+s , z-q₅ , x-q₆ = z*x-q₂ s in
-    q₃ ℚ⁺.+ q₅ , {!q₅ ⊔ q₆!} , {!!} , (λ s₁ → q₃ , q₅ , ℚ⁺.+-increasing , y-q₃ , z-q₅) , {!!}) ,
-  {!!}
--}
+-- FIXME: this is also true for rational
+rational+<∞ : ∀ q → rational+ q < ∞
+rational+<∞ q = q , ℚ.≤-refl , (λ x → x)
+
+*-zeroˡ : ∀ x → x < ∞ → (x * 0ℝ) ≃ 0ℝ
+*-zeroˡ x (ε₁ , x∋ε₁ , _) .proj₁ .*≤* {ε} tt s =
+  ε₁ ,
+  1/ ε₁ qpos.* (ε qpos.+ s) ,
+  (begin
+    ε₁ ℚ⁺.* (1/ ε₁ qpos.* (ε qpos.+ s))
+  ≈⟨ qpos.≃-sym (qpos.*-assoc ε₁ (1/ ε₁) (ε qpos.+ s)) ⟩
+    (ε₁ ℚ⁺.* 1/ ε₁) qpos.* (ε qpos.+ s)
+  ≈⟨ qpos.*-cong (qpos.*-inverseʳ ε₁) qpos.≃-refl ⟩
+    qpos.1ℚ⁺ qpos.* (ε qpos.+ s)
+  ≈⟨ qpos.*-identityˡ (ε qpos.+ s) ⟩
+    ε ℚ⁺.+ s
+  ∎) ,
+  x∋ε₁ ,
+  tt
+  where open ℚ⁺.≤-Reasoning
+*-zeroˡ x x<∞ .proj₂ = 0-least (x * 0ℝ)
+
+1ℝ : ℝᵘ
+1ℝ = rational 1ℚ
+
+*-identityˡ : ∀ x → (1ℝ * x) ≃ x
+*-identityˡ x .proj₁ .*≤* {ε} x∋ε s =
+  ℚ⁺.1ℚ⁺ ,
+  ε ,
+  qpos.≤-trans (qpos.≤-reflexive (qpos.*-identityˡ ε)) qpos.+-increasing ,
+  ℚ.≤-refl ,
+  x∋ε
+*-identityˡ x .proj₂ .*≤* {ε} 1x∋ε =
+  x .closed λ s →
+  let ε₁ , ε₂ , ε₁ε₂≤ε+s , 1≤ε₁ , x∋ε₂ = 1x∋ε s in
+  x .upper
+    (begin
+      ε₂
+    ≈⟨ qpos.≃-sym (qpos.*-identityˡ ε₂) ⟩
+      ℚ⁺.1ℚ⁺ ℚ⁺.* ε₂
+    ≤⟨ qpos.*-mono-≤ (qpos.r≤r 1≤ε₁) (qpos.≤-refl {ε₂}) ⟩
+      ε₁ ℚ⁺.* ε₂
+    ≤⟨ ε₁ε₂≤ε+s ⟩
+      ε ℚ⁺.+ s
+    ∎)
+    x∋ε₂
+    where open ℚ⁺.≤-Reasoning
+
+*-identityʳ : ∀ x → (x * 1ℝ) ≃ x
+*-identityʳ x = ≃-trans (*-comm x 1ℝ) (*-identityˡ x)
+
+*-assoc : Associative _≃_ _*_
+*-assoc x y z .proj₁ .*≤* {ε} x[yz]∋ε s =
+  let ε₁ , ε₂ , ε₁ε₂≤ε+s , x∋ε₁ , yz∋ε₂ = x[yz]∋ε (s /2) in
+  let ε₂₁ , ε₂₂ , ε₂₁ε₂₂≤ε₂+s , y∋ε₂₁ , z∋ε₂₂ = yz∋ε₂ (1/ ε₁ ℚ⁺.* s /2) in
+  ε₁ ℚ⁺.* ε₂₁ ,
+  ε₂₂ ,
+  (begin
+    (ε₁ ℚ⁺.* ε₂₁) ℚ⁺.* ε₂₂
+  ≈⟨ ℚ⁺.*-assoc ε₁ ε₂₁ ε₂₂ ⟩
+    ε₁ ℚ⁺.* (ε₂₁ ℚ⁺.* ε₂₂)
+  ≤⟨ qpos.*-mono-≤ (ℚ⁺.≤-refl {ε₁}) ε₂₁ε₂₂≤ε₂+s ⟩
+    ε₁ ℚ⁺.* (ε₂ ℚ⁺.+ (1/ ε₁ ℚ⁺.* s /2))
+  ≈⟨ qpos.*-distribˡ-+ ε₁ ε₂ (1/ ε₁ ℚ⁺.* s /2) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ ε₁ ℚ⁺.* (1/ ε₁ ℚ⁺.* s /2)
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.≃-sym (qpos.*-assoc ε₁ (1/ ε₁) (s /2))) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ (ε₁ ℚ⁺.* 1/ ε₁) ℚ⁺.* s /2
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-congˡ (s /2) (qpos.*-inverseʳ ε₁)) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ ℚ⁺.1ℚ⁺ ℚ⁺.* s /2
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-identityˡ (s /2)) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ s /2
+  ≤⟨ qpos.+-mono-≤ ε₁ε₂≤ε+s (ℚ⁺.≤-refl {s /2}) ⟩
+    (ε ℚ⁺.+ s /2) ℚ⁺.+ s /2
+  ≈⟨ ℚ⁺.+-assoc ε (s /2) (s /2) ⟩
+    ε ℚ⁺.+ (s /2 ℚ⁺.+ s /2)
+  ≈⟨ ℚ⁺.+-congʳ ε qpos.half+half ⟩
+    ε ℚ⁺.+ s
+  ∎) ,
+  (λ r → ε₁ , ε₂₁ , ℚ⁺.+-increasing , x∋ε₁ , y∋ε₂₁) ,
+  z∋ε₂₂
+  where open ℚ⁺.≤-Reasoning
+*-assoc x y z .proj₂ .*≤* {ε} [xy]z∋ε s =
+  let ε₁ , ε₂ , ε₁ε₂≤ε+ , xy∋ε₁ , z∋ε₂ = [xy]z∋ε (s /2) in
+  let ε₁₁ , ε₁₂ , ε₁₁ε₁₂≤ε₁+ , x∋ε₁₁ , y∋ε₁₂ = xy∋ε₁ (s /2 ℚ⁺.* 1/ ε₂) in
+  ε₁₁ ,
+  ε₁₂ ℚ⁺.* ε₂ ,
+  (begin
+    ε₁₁ ℚ⁺.* (ε₁₂ ℚ⁺.* ε₂)
+  ≈⟨ qpos.≃-sym (qpos.*-assoc ε₁₁ ε₁₂ ε₂) ⟩
+    (ε₁₁ ℚ⁺.* ε₁₂) ℚ⁺.* ε₂
+  ≤⟨ qpos.*-mono-≤ ε₁₁ε₁₂≤ε₁+ (ℚ⁺.≤-refl {ε₂}) ⟩
+    (ε₁ ℚ⁺.+ (s /2 ℚ⁺.* 1/ ε₂)) ℚ⁺.* ε₂
+  ≈⟨ qpos.*-distribʳ-+ ε₂ ε₁ (s /2 ℚ⁺.* 1/ ε₂) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ (s /2 ℚ⁺.* 1/ ε₂) ℚ⁺.* ε₂
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-assoc (s /2) (1/ ε₂) ε₂) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ s /2 ℚ⁺.* (1/ ε₂ ℚ⁺.* ε₂)
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-congʳ (s /2) (qpos.*-inverseˡ ε₂)) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ s /2 ℚ⁺.* ℚ⁺.1ℚ⁺
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-identityʳ (s /2)) ⟩
+    ε₁ ℚ⁺.* ε₂ ℚ⁺.+ s /2
+  ≤⟨ qpos.+-mono-≤ ε₁ε₂≤ε+ (ℚ⁺.≤-refl {s /2}) ⟩
+    (ε ℚ⁺.+ s /2) ℚ⁺.+ s /2
+  ≈⟨ ℚ⁺.+-assoc ε (s /2) (s /2) ⟩
+    ε ℚ⁺.+ (s /2 ℚ⁺.+ s /2)
+  ≈⟨ ℚ⁺.+-congʳ ε qpos.half+half ⟩
+    ε ℚ⁺.+ s
+  ∎) ,
+  x∋ε₁₁ ,
+  λ r → ε₁₂ , ε₂ , ℚ⁺.+-increasing , y∋ε₁₂ , z∋ε₂
+  where open ℚ⁺.≤-Reasoning
+
+*-distribʳ-+ : ∀ x y z → ((y + z) * x) ≃ ((y * x) + (z * x)) -- _DistributesOverʳ_ _≃_ _*_ _+_
+*-distribʳ-+ x y z .proj₁ .*≤* {ε} yx+zx∋ε s =
+  let ε₁ , ε₂ , ε₁+ε₂≤ε+ , yx∋ε₁ , zx∋ε₂ = yx+zx∋ε (s /2) in
+  let ε₁₁ , ε₁₂ , ε₁₁ε₁₂≤ε₁+ , y∋ε₁₁ , x∋ε₁₂ = yx∋ε₁ (s /2 /2) in
+  let ε₂₁ , ε₂₂ , ε₂₁ε₂₂≤ε₂+ , z∋ε₂₁ , x∋ε₂₂ = zx∋ε₂ (s /2 /2) in
+  ε₁₁ ℚ⁺.+ ε₂₁ ,
+  ε₁₂ ℚ⁺.⊓ ε₂₂ ,
+  (begin
+    (ε₁₁ ℚ⁺.+ ε₂₁) ℚ⁺.* (ε₁₂ ℚ⁺.⊓ ε₂₂)
+  ≈⟨ ℚ⁺.*-distribʳ-+ (ε₁₂ ℚ⁺.⊓ ε₂₂) ε₁₁ ε₂₁ ⟩
+    ε₁₁ ℚ⁺.* (ε₁₂ ℚ⁺.⊓ ε₂₂) ℚ⁺.+ ε₂₁ ℚ⁺.* (ε₁₂ ℚ⁺.⊓ ε₂₂)
+  ≤⟨ qpos.+-mono-≤ (qpos.*-mono-≤ (qpos.≤-refl {ε₁₁}) (qpos.⊓-least-1 ε₁₂ ε₂₂)) (qpos.*-mono-≤ (qpos.≤-refl {ε₂₁}) (qpos.⊓-least-2 ε₁₂ ε₂₂)) ⟩
+    ε₁₁ ℚ⁺.* ε₁₂ ℚ⁺.+ ε₂₁ ℚ⁺.* ε₂₂
+  ≤⟨ qpos.+-mono-≤ ε₁₁ε₁₂≤ε₁+ ε₂₁ε₂₂≤ε₂+ ⟩
+    (ε₁ ℚ⁺.+ s /2 /2) ℚ⁺.+ (ε₂ ℚ⁺.+ s /2 /2)
+  ≈⟨ ℚ⁺-interchange ε₁ (s /2 /2) ε₂ (s /2 /2) ⟩
+    (ε₁ ℚ⁺.+ ε₂) ℚ⁺.+ (s /2 /2 ℚ⁺.+ s /2 /2)
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.+ ε₂) (qpos.half+half {s /2}) ⟩
+    (ε₁ ℚ⁺.+ ε₂) ℚ⁺.+ s /2
+  ≤⟨ qpos.+-mono-≤ ε₁+ε₂≤ε+ (qpos.≤-refl {s /2}) ⟩
+    (ε ℚ⁺.+ s /2) ℚ⁺.+ s /2
+  ≈⟨ qpos.+-assoc ε (s /2) (s /2) ⟩
+    ε ℚ⁺.+ (s /2 ℚ⁺.+ s /2)
+  ≈⟨ qpos.+-congʳ ε (qpos.half+half {s}) ⟩
+    ε ℚ⁺.+ s
+  ∎) ,
+  (λ r → ε₁₁ , ε₂₁ , ℚ⁺.+-increasing , y∋ε₁₁ , z∋ε₂₁) ,
+  x∋⊓ ε₁₂ ε₂₂ x∋ε₁₂ x∋ε₂₂
+  where open ℚ⁺.≤-Reasoning
+        x∋⊓ : ∀ ε₁ ε₂ → x .contains ε₁ → x .contains ε₂ → x .contains (ε₁ ℚ⁺.⊓ ε₂)
+        x∋⊓ ε₁ ε₂ x∋ε₁ x∋ε₂ with qpos.⊓-selective ε₁ ε₂
+        x∋⊓ ε₁ ε₂ x∋ε₁ x∋ε₂ | inj₁ p = x .upper (qpos.≤-reflexive (qpos.≃-sym p)) x∋ε₁
+        x∋⊓ ε₁ ε₂ x∋ε₁ x∋ε₂ | inj₂ p = x .upper (qpos.≤-reflexive (qpos.≃-sym p)) x∋ε₂
+*-distribʳ-+ x y z .proj₂ .*≤* {ε} [y+z]x∋ε s =
+  let ε₁ , ε₂ , ε₁ε₂≤ε+ , y+z∋ε₁ , x∋ε₂ = [y+z]x∋ε (s /2) in
+  let ε₁₁ , ε₁₂ , ε₁₁+ε₁₂≤ε₁+ , y∋ε₁₁ , z∋ε₁₂ = y+z∋ε₁ (s /2 ℚ⁺.* 1/ ε₂) in
+  ε₁₁ ℚ⁺.* ε₂ ,
+  ε₁₂ ℚ⁺.* ε₂ ,
+  (begin
+    (ε₁₁ ℚ⁺.* ε₂) ℚ⁺.+ (ε₁₂ ℚ⁺.* ε₂)
+  ≈⟨ qpos.≃-sym (qpos.*-distribʳ-+ ε₂ ε₁₁ ε₁₂) ⟩
+    (ε₁₁ ℚ⁺.+ ε₁₂) ℚ⁺.* ε₂
+  ≤⟨ qpos.*-mono-≤ ε₁₁+ε₁₂≤ε₁+ (qpos.≤-refl {ε₂}) ⟩
+    (ε₁ ℚ⁺.+ (s /2 ℚ⁺.* 1/ ε₂)) ℚ⁺.* ε₂
+  ≈⟨ qpos.*-distribʳ-+ ε₂ ε₁ (s /2 ℚ⁺.* 1/ ε₂) ⟩
+    (ε₁ ℚ⁺.* ε₂) ℚ⁺.+ (s /2 ℚ⁺.* 1/ ε₂) ℚ⁺.* ε₂
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-assoc (s /2) (1/ ε₂) ε₂) ⟩
+    (ε₁ ℚ⁺.* ε₂) ℚ⁺.+ s /2 ℚ⁺.* (1/ ε₂ ℚ⁺.* ε₂)
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-congʳ (s /2) (qpos.*-inverseˡ ε₂)) ⟩
+    (ε₁ ℚ⁺.* ε₂) ℚ⁺.+ s /2 ℚ⁺.* ℚ⁺.1ℚ⁺
+  ≈⟨ qpos.+-congʳ (ε₁ ℚ⁺.* ε₂) (qpos.*-identityʳ (s /2)) ⟩
+    (ε₁ ℚ⁺.* ε₂) ℚ⁺.+ s /2
+  ≤⟨ qpos.+-mono-≤ ε₁ε₂≤ε+ (qpos.≤-refl {s /2}) ⟩
+    (ε ℚ⁺.+ s /2) ℚ⁺.+ s /2
+  ≈⟨ qpos.+-assoc ε (s /2) (s /2) ⟩
+    ε ℚ⁺.+ (s /2 ℚ⁺.+ s /2)
+  ≈⟨ qpos.+-congʳ ε (qpos.half+half {s}) ⟩
+    ε ℚ⁺.+ s
+  ∎) ,
+  (λ r → ε₁₁ , ε₂ , ℚ⁺.+-increasing , y∋ε₁₁ , x∋ε₂) ,
+  (λ r → ε₁₂ , ε₂ , ℚ⁺.+-increasing , z∋ε₁₂ , x∋ε₂)
+  where open ℚ⁺.≤-Reasoning
+
+*-distribˡ-+ : ∀ x y z → (x * (y + z)) ≃ ((x * y) + (x * z))
+*-distribˡ-+ x y z =
+  begin-equality
+    x * (y + z)
+  ≈⟨ *-comm x (y + z) ⟩
+    (y + z) * x
+  ≈⟨ *-distribʳ-+ x y z ⟩
+    (y * x) + (z * x)
+  ≈⟨ +-cong (*-comm y x) (*-comm z x) ⟩
+    (x * y) + (x * z)
+  ∎
+  where open ≤-Reasoning
+
 
 -- reciprocal?
 -- would we have 1/ 0 = ∞ ?
@@ -373,7 +581,8 @@ rational⁺-+ q r =
 (1/ℝ x) .closed = {!!}
 -}
 
-
+------------------------------------------------------------------------------
+{-
 scale : ℚ⁺ → ℝᵘ → ℝᵘ
 scale r x .contains q = ∀ s → Σ[ q₁ ∈ ℚ⁺ ] (r ℚ⁺.* q₁ ℚ⁺.≤ q ℚ⁺.+ s × x .contains q₁)
 scale r x .upper q₁≤q₂ rx-q₁ s =
@@ -503,12 +712,74 @@ scale-+ {q}{x}{y} .proj₂ .*≤* {ε} q⟨x+y⟩-ε s =
   qpos.≤-trans (qpos.≤-reflexive (qpos.≃-sym (qpos.*-assoc q₁ q₂ ε₁))) q₁q₂ε₁≤ε+s ,
   λ r → ε₁ , qpos.+-increasing , x-ε₁
 
+rational-scale : ∀ q₁ q₂ → 0ℚ ℚ.≤ q₂ → rational (ℚ⁺.fog q₁ ℚ.* q₂) ≃ scale q₁ (rational q₂)
+rational-scale q₁ q₂ 0≤q₂ .proj₁ .*≤* {ε} [q₁]*q₂≤ε =
+  rational (qpos.fog q₁ ℚ.* q₂) .closed {ε} λ s →
+  let ε₁ , q₁ε₁≤ε+s , q₂≤ε₁ = [q₁]*q₂≤ε s in
+  begin
+    qpos.fog q₁ ℚ.* q₂
+  ≤⟨ ℚ.*-monoʳ-≤-pos {ℚ⁺.fog q₁} (ℚ.positive (ℚ⁺.fog-positive {q₁})) q₂≤ε₁ ⟩
+    qpos.fog q₁ ℚ.* qpos.fog ε₁
+  ≈⟨ qpos.*-fog q₁ ε₁ ⟩
+    qpos.fog (q₁ ℚ⁺.* ε₁)
+  ≤⟨ qpos.fog-mono q₁ε₁≤ε+s ⟩
+    qpos.fog (ε qpos.+ s)
+  ∎
+  where open ℚ.≤-Reasoning
+rational-scale q₁ q₂ 0≤q₂ .proj₂ .*≤* {ε} q₁q₂≤ε s =
+  qpos.nn+pos q₂ (1/ q₁ ℚ⁺.* s) 0≤q₂ ,
+  qpos.r≤r (begin
+             qpos.fog q₁ ℚ.* (q₂ ℚ.+ qpos.fog (1/ q₁ ℚ⁺.* s))
+           ≈⟨ ℚ.*-distribˡ-+ (qpos.fog q₁) q₂ (qpos.fog (1/ q₁ ℚ⁺.* s)) ⟩
+             qpos.fog q₁ ℚ.* q₂ ℚ.+ qpos.fog q₁ ℚ.* qpos.fog (1/ q₁ ℚ⁺.* s)
+           ≤⟨ ℚ.+-mono-≤ q₁q₂≤ε (ℚ.≤-refl {qpos.fog q₁ ℚ.* qpos.fog (1/ q₁ ℚ⁺.* s)}) ⟩
+             qpos.fog ε ℚ.+ qpos.fog q₁ ℚ.* qpos.fog (1/ q₁ ℚ⁺.* s)
+           ≈⟨ ℚ.+-congʳ (qpos.fog ε) (ℚ.≃-sym (qpos.*-fog q₁ (1/ q₁ ℚ⁺.* s))) ⟩
+             qpos.fog ε ℚ.+ qpos.fog (q₁ ℚ⁺.* (1/ q₁ ℚ⁺.* s))
+           ≈⟨ ℚ.+-congʳ (qpos.fog ε) (qpos.fog-cong (ℚ⁺.≃-sym (ℚ⁺.*-assoc q₁ (1/ q₁) s))) ⟩
+             qpos.fog ε ℚ.+ qpos.fog ((q₁ ℚ⁺.* 1/ q₁) ℚ⁺.* s)
+           ≈⟨ ℚ.+-congʳ (qpos.fog ε) (qpos.fog-cong (qpos.*-cong (qpos.*-inverseʳ q₁) (qpos.≃-refl {s}))) ⟩
+             qpos.fog ε ℚ.+ qpos.fog (ℚ⁺.1ℚ⁺ ℚ⁺.* s)
+           ≈⟨ ℚ.+-congʳ (qpos.fog ε) (qpos.fog-cong (qpos.*-identityˡ s)) ⟩
+             qpos.fog ε ℚ.+ qpos.fog s
+           ∎) ,
+  qpos.q≤nn+pos q₂ (1/ q₁ ℚ⁺.* s)
+  where open ℚ.≤-Reasoning
+-}
+
 ------------------------------------------------------------------------------
--- truncating subtraction, which is essentially an exponential in this
--- posetal category
---
--- to get the full subtraction, we want to basically encode the Day
--- exponential
+-- truncating subtraction, which is essentially an exponential
+-- ("residual") in the reversed poset.
+_⊝_ : ℝᵘ → ℝᵘ → ℝᵘ
+(x ⊝ y) .contains ε =
+  ∀ ε' → y .contains ε' → x .contains (ε ℚ⁺.+ ε')
+(x ⊝ y) .upper ε₁≤ε₂ h ε' y∋ε' =
+  x .upper (qpos.+-mono-≤ ε₁≤ε₂ qpos.≤-refl) (h ε' y∋ε')
+(x ⊝ y) .closed {ε} h ε' y∋ε' =
+  x .closed λ s → x .upper (qpos.≤-reflexive (eq s)) (h s ε' y∋ε')
+  where open import CommutativeSemigroupSolver (ℚ⁺.+-commutativeSemigroup)
+        a = v# 0; b = v# 1; c = v# 2
+        eq : ∀ s → ε qpos.+ s qpos.+ ε' qpos.≃ ε qpos.+ ε' qpos.+ s
+        eq s = prove 3 ((a ⊕ b) ⊕ c) ((a ⊕ c) ⊕ b) (ε ∷ s ∷ ε' ∷ [])
+
+residual-1 : ∀ x y z → (x ⊝ y) ≤ z → x ≤ (y + z)
+residual-1 x y z x⊝y≤z .*≤* {ε} y+z∈ε =
+  x .closed λ s →
+  let ε₁ , ε₂ , ε₁+ε₂≤ε+s , y∋ε₁ , z∋ε₂ = y+z∈ε s in
+  x .upper (ℚ⁺.≤-trans (ℚ⁺.≤-reflexive (ℚ⁺.+-comm ε₂ ε₁)) ε₁+ε₂≤ε+s)
+           (x⊝y≤z .*≤* z∋ε₂ ε₁ y∋ε₁)
+
+residual-2 : ∀ x y z → x ≤ (y + z) → (x ⊝ y) ≤ z
+residual-2 x y z x≤y+z .*≤* {ε} z∋ε ε' y∋ε' =
+  x≤y+z .*≤* λ s →
+  ε' ,
+  ε ,
+  qpos.≤-trans (qpos.≤-reflexive (qpos.+-comm ε' ε)) qpos.+-increasing ,
+  y∋ε' ,
+  z∋ε
+
+------------------------------------------------------------------------------
+-- FIXME: this is the old truncating subtraction, just for rationals
 _⊖_ : ℝᵘ → ℚ⁺ → ℝᵘ
 (x ⊖ r) .contains q = x .contains (q ℚ⁺.+ r)
 (x ⊖ r) .upper q₁≤q₂ = x .upper (qpos.+-mono-≤ q₁≤q₂ ℚ⁺.≤-refl)
@@ -661,6 +932,9 @@ inf-greatest {I}{S}{x} h .*≤* {ε} infIS∋ε =
   x .closed λ s →
   let i , Si∋ε+s = infIS∋ε s in
   h i .*≤* Si∋ε+s
+
+-- FIXME: show that mimimum of the empty set is ∞
+-- FIXME: show that it distributes over +
 
 ------------------------------------------------------------------------------
 {-

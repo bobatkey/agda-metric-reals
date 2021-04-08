@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 module metric2.completion where
 
 open import Data.Product using (_×_; _,_; proj₁; proj₂; swap)
@@ -210,8 +212,6 @@ unit-join .f≈f x =
 -- This is a monoidal monad, with respect to the monoidal product
 
 open import metric2.monoidal
-
--- FIXME: the inverse as well
 
 monoidal-⊗ : ∀ {X Y} → (𝒞 X ⊗ 𝒞 Y) ⇒ 𝒞 (X ⊗ Y)
 monoidal-⊗ .fun (x , y) .rfun ε = x .rfun (ε /2) , y .rfun (ε /2)

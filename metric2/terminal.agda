@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 module metric2.terminal where
 
 open import Data.Unit using (⊤; tt)

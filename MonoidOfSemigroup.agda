@@ -1,3 +1,6 @@
+{-# OPTIONS --without-K --safe #-}
+
+open import Level using (_⊔_)
 open import Algebra
 
 module MonoidOfSemigroup {m₁ m₂} (M : CommutativeSemigroup m₁ m₂) where
@@ -16,7 +19,7 @@ u     ⊕ y     = y
 (` x) ⊕ u     = ` x
 (` x) ⊕ (` y) = ` (x ∙ y)
 
-data _≃_ : MCarrier → MCarrier → Set m₂ where
+data _≃_ : MCarrier → MCarrier → Set (m₁ ⊔ m₂) where
   u≃u : u ≃ u
   x≃y : ∀ {x y} → x ≈ y → (` x) ≃ (` y)
 
@@ -35,7 +38,7 @@ data _≃_ : MCarrier → MCarrier → Set m₂ where
 ≃-isEquivalence : IsEquivalence _≃_
 ≃-isEquivalence = record { refl = ≃-refl ; sym = ≃-sym ; trans = ≃-trans }
 
-≃-setoid : Setoid m₁ m₂
+≃-setoid : Setoid m₁ (m₁ ⊔ m₂)
 ≃-setoid = record { isEquivalence = ≃-isEquivalence }
 
 embedding : ∀ {x y} → (` x) ≃ (` y) → x ≈ y
@@ -99,22 +102,22 @@ embedding (x≃y e) = e
 ------------------------------------------------------------------------
 -- Algebraic bundles
 
-⊕-magma : Magma m₁ m₂
+⊕-magma : Magma m₁ (m₁ ⊔ m₂)
 ⊕-magma = record
   { isMagma = ⊕-isMagma
   }
 
-⊕-semigroup : Semigroup m₁ m₂
+⊕-semigroup : Semigroup m₁ (m₁ ⊔ m₂)
 ⊕-semigroup = record
   { isSemigroup = ⊕-isSemigroup
   }
 
-⊕-u-monoid : Monoid m₁ m₂
+⊕-u-monoid : Monoid m₁ (m₁ ⊔ m₂)
 ⊕-u-monoid = record
   { isMonoid = ⊕-u-isMonoid
   }
 
-⊕-u-commutativeMonoid : CommutativeMonoid m₁ m₂
+⊕-u-commutativeMonoid : CommutativeMonoid m₁ (m₁ ⊔ m₂)
 ⊕-u-commutativeMonoid = record
   { isCommutativeMonoid = ⊕-u-isCommutativeMonoid
   }

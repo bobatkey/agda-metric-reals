@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 module metric2.internal-hom where
 
 open import Data.Product using (_,_)

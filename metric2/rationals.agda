@@ -1,9 +1,11 @@
+{-# OPTIONS --without-K --safe #-}
+
 module metric2.rationals where
 
 open import Algebra using (AbelianGroup)
 open import Relation.Binary using (_Preserves₂_⟶_⟶_; IsDecTotalOrder)
 open import Data.Sum using (inj₁; inj₂)
-open import Data.Product
+open import Data.Product using (proj₁; proj₂; _,_)
 
 -- Every totally ordered abelian group has an absolute value operator
 module absolute {c ℓ}
@@ -74,10 +76,10 @@ module absolute {c ℓ}
     bloo : ∀ {x} → 0A ≤ x → 0A ≤ (- x) → 0A ≈ x
     bloo {x} 0≤x 0≤-x = sym (trans (sym (⁻¹-involutive x)) (trans (⁻¹-cong (blah 0≤x 0≤-x)) ε⁻¹≈ε))
 
-  non-negative : ∀ {x} → 0A ≤ abs x
-  non-negative {x} with total 0A x
-  non-negative {x} | inj₁ 0≤x = 0≤x
-  non-negative {x} | inj₂ x≤0 = switch1 x≤0
+  non-negative : ∀ x → 0A ≤ abs x
+  non-negative x with total 0A x
+  non-negative x | inj₁ 0≤x = 0≤x
+  non-negative x | inj₂ x≤0 = switch1 x≤0
 
   positive-definite : ∀ {x} → abs x ≈ 0A → x ≈ 0A
   positive-definite {x} ∣x∣≈0 with total 0A x
@@ -151,16 +153,24 @@ import Data.Rational.Unnormalised.Properties as ℚ
 open import metric2.base
 open import upper-reals
 
-open absolute ℚ.+-0-abelianGroup ℚ._≤_ ℚ.+-mono-≤ ℚ.≤-isDecTotalOrder
+open absolute ℚ.+-0-abelianGroup ℚ._≤_ ℚ.+-mono-≤ ℚ.≤-isDecTotalOrder public
 
 open MSpc
 open _⇒_
+open _≈f_
 
--- FIXME: this ought to work for any abelian group with a norm : G → ℝᵘ
 ℚspc : MSpc
 ℚspc .Carrier = ℚ
 ℚspc .dist x y = rational (abs (x ℚ.- y))
-ℚspc .refl {x} = ≤-trans (rational-mono (ℚ.≤-reflexive (pos-def₂ (ℚ.+-inverseʳ x)))) rational-0
+ℚspc .refl {x} =
+  begin
+    rational (abs (x ℚ.- x))
+  ≈⟨ rational-cong (pos-def₂ (ℚ.+-inverseʳ x)) ⟩
+    rational 0ℚ
+  ≈⟨ rational-0 ⟩
+    0ℝ
+  ∎
+  where open ≤-Reasoning
 ℚspc .sym {x}{y} = rational-mono (ℚ.≤-reflexive (ℚ.≃-trans (abs-cong eq) (even {y ℚ.- x})))
   where open import Algebra.Properties.AbelianGroup ℚ.+-0-abelianGroup
         -- FIXME: tidy this up
@@ -171,7 +181,7 @@ open _⇒_
 ℚspc .triangle {x}{y}{z} =
   -- FIXME: tidy this up
   ≤-trans (rational-mono (ℚ.≤-trans (ℚ.≤-reflexive (abs-cong {x ℚ.- z}{(x ℚ.- y) ℚ.+ (y ℚ.- z)} p)) (sub-add (x ℚ.- y) (y ℚ.- z))))
-    (≤-reflexive (≃-sym (rational-+ (abs (x ℚ.- y)) (abs (y ℚ.- z)) (non-negative {x ℚ.- y}) (non-negative {y ℚ.- z}))))
+    (≤-reflexive (≃-sym (rational-+ (abs (x ℚ.- y)) (abs (y ℚ.- z)) (non-negative (x ℚ.- y)) (non-negative (y ℚ.- z)))))
   where open ℚ.≤-Reasoning
         p : x ℚ.- z ℚ.≃ x ℚ.- y ℚ.+ (y ℚ.- z)
         p = begin-equality
@@ -186,29 +196,66 @@ open _⇒_
               x ℚ.- y ℚ.+ (y ℚ.- z)
             ∎
 
+ℚspc-≈ : ∀ {q r} → q ℚ.≃ r → _≈_ ℚspc q r
+ℚspc-≈ {q}{r} q≃r =
+  begin
+    rational (abs (q ℚ.- r))
+  ≈⟨ rational-cong (abs-cong (ℚ.+-congˡ (ℚ.- r) q≃r)) ⟩
+    rational (abs (r ℚ.- r))
+  ≈⟨ rational-cong (abs-cong (ℚ.+-inverseʳ r)) ⟩
+    rational (abs 0ℚ)
+  ≈⟨ rational-cong (pos-def₂ ℚ.≃-refl) ⟩
+    rational 0ℚ
+  ≈⟨ rational-0 ⟩
+    0ℝ
+  ∎
+  where open ≤-Reasoning
+
+
 open import metric2.monoidal
 open import metric2.terminal
+open import qpos as ℚ⁺ using (ℚ⁺)
+open metric2.base.category
 
 const : ℚ → ⊤ₘ ⇒ ℚspc
 const q .fun _ = q
 const q .non-expansive = ℚspc .refl {q}
+
+------------------------------------------------------------------------------
+-- ℚspc is a commutative monoid object in the category of metric
+-- spaces and non-expansive maps
+
+zero : ⊤ₘ ⇒ ℚspc
+zero = const 0ℚ
 
 add : (ℚspc ⊗ ℚspc) ⇒ ℚspc
 add .fun (a , b) = a ℚ.+ b
 add .non-expansive {a₁ , b₁}{a₂ , b₂} =
   begin
     rational (abs (a₁ ℚ.+ b₁ ℚ.- (a₂ ℚ.+ b₂)))
-      ≈⟨ rational-cong (abs-cong (ℚ.+-congʳ (a₁ ℚ.+ b₁) (ℚ.≃-sym (⁻¹-∙-comm a₂ b₂)))) ⟩
+  ≈⟨ rational-cong (abs-cong (ℚ.+-congʳ (a₁ ℚ.+ b₁) (ℚ.≃-sym (⁻¹-∙-comm a₂ b₂)))) ⟩
     rational (abs (a₁ ℚ.+ b₁ ℚ.+ (ℚ.- a₂ ℚ.- b₂)))
-      ≈⟨ rational-cong (abs-cong (ℚ-interchange a₁ b₁ (ℚ.- a₂) (ℚ.- b₂))) ⟩
+  ≈⟨ rational-cong (abs-cong (ℚ-interchange a₁ b₁ (ℚ.- a₂) (ℚ.- b₂))) ⟩
     rational (abs ((a₁ ℚ.- a₂) ℚ.+ (b₁ ℚ.- b₂)))
-      ≤⟨ rational-mono (sub-add (a₁ ℚ.- a₂) (b₁ ℚ.- b₂)) ⟩
+  ≤⟨ rational-mono (sub-add (a₁ ℚ.- a₂) (b₁ ℚ.- b₂)) ⟩
     rational (abs (a₁ ℚ.- a₂) ℚ.+ abs (b₁ ℚ.- b₂))
-      ≈⟨ ≃-sym (rational-+ (abs (a₁ ℚ.- a₂)) (abs (b₁ ℚ.- b₂)) (non-negative {a₁ ℚ.- a₂}) (non-negative {b₁ ℚ.- b₂})) ⟩
+  ≈⟨ ≃-sym (rational-+ (abs (a₁ ℚ.- a₂)) (abs (b₁ ℚ.- b₂)) (non-negative (a₁ ℚ.- a₂)) (non-negative (b₁ ℚ.- b₂))) ⟩
     dist (ℚspc ⊗ ℚspc) (a₁ , b₁) (a₂ , b₂)
   ∎
   where open ≤-Reasoning
         open import Algebra.Properties.AbelianGroup (ℚ.+-0-abelianGroup)
+
+add-identityˡ : (add ∘ (zero ⊗f id) ∘ left-unit⁻¹) ≈f id
+add-identityˡ .f≈f a = ℚspc-≈ (ℚ.+-identityˡ a)
+
+add-comm : (add ∘ swap) ≈f add
+add-comm .f≈f (a , b) = ℚspc-≈ (ℚ.+-comm b a)
+
+add-assoc : (add ∘ (add ⊗f id) ∘ ⊗-assoc) ≈f (add ∘ (id ⊗f add))
+add-assoc .f≈f (a , (b , c)) = ℚspc-≈ (ℚ.+-assoc a b c)
+
+------------------------------------------------------------------------------
+-- Negation, so we have a (graded) abelian group object
 
 negate : ℚspc ⇒ ℚspc
 negate .fun a = ℚ.- a
@@ -225,38 +272,39 @@ negate .non-expansive {a}{b} =
 
 -- this gives a quantitative abelian group
 --    x :2 ℚspc |- x + (- x) ≡ 0   (assuming weakening)
---    + associativity and commutativity
 
+------------------------------------------------------------------------------
+-- Multiplication by a "scalar"
 open import metric2.scaling
-open import qpos as ℚ⁺ using (ℚ⁺)
-
--- FIXME: make this work for any q : ℚ; need scaling to work for non-negative rationals
 {-
+-- FIXME: make this work for any q : ℚ; need scaling to work for non-negative rationals
 ℚ-scale : (q : ℚ⁺) → ![ q ] ℚspc ⇒ ℚspc
 ℚ-scale q .fun a = ℚ⁺.fog q ℚ.* a
 ℚ-scale q .non-expansive {a}{b} =
   begin
     rational (abs (ℚ⁺.fog q ℚ.* a ℚ.- ℚ⁺.fog q ℚ.* b))
-  ≈⟨ {!!} ⟩
+  ≈⟨ rational-cong (abs-cong (ℚ.+-congʳ (ℚ⁺.fog q ℚ.* a) (ℚ.neg-distribʳ-* (ℚ⁺.fog q) b))) ⟩
     rational (abs (ℚ⁺.fog q ℚ.* a ℚ.+ ℚ⁺.fog q ℚ.* (ℚ.- b)))
-  ≈⟨ {!!} ⟩
+  ≈⟨ rational-cong (abs-cong (ℚ.≃-sym (ℚ.*-distribˡ-+ (ℚ⁺.fog q) a (ℚ.- b)))) ⟩
     rational (abs (ℚ⁺.fog q ℚ.* (a ℚ.- b)))
-  ≈⟨ {!!} ⟩
+  ≈⟨ rational-cong {!!} ⟩
     rational (ℚ⁺.fog q ℚ.* abs (a ℚ.- b))
-  ≈⟨ {!!} ⟩
-    scale q (rational (abs (a ℚ.- b)))
+  ≈⟨ {!!} ⟩ -- rational-scale q (abs (a ℚ.- b)) (non-negative (a ℚ.- b)) ⟩
+    rational+ q * rational (abs (a ℚ.- b))
   ≈⟨ ≃-refl ⟩
-    scale q (dist ℚspc a b)
+    rational+ q * ℚspc .dist a b
   ≈⟨ ≃-refl ⟩
     dist (![ q ] ℚspc) a b
   ∎
   where open ≤-Reasoning
 -}
+------------------------------------------------------------------------------
+-- Multiplication
 
 {-
 -- FIXME: the following need sub-ranges of ℚspc to be defined
 
-mul : ∀ a → (ℚspc[ - a , a ] ⊗ ![ abs a ] ℚspc) ⇒ ℚspc -- FIXME: output bound?
+mul : ∀ a → (ℚspc[ - a , a ] ⊗ ![ abs a ] ℚspc) ⇒ ℚspc
 mul = ?
 
 recip : ∀ a → ![ a ] ℚspc[ a ⟩ ⇒ ℚspc

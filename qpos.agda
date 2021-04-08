@@ -15,7 +15,7 @@ open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Unit using (⊤; tt)
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality -- using (refl)
-open import Relation.Nullary using (yes; no)
+open import Relation.Nullary using (yes; no; ¬_)
 
 record ℚ⁺ : Set where
   constructor ⟨_,_⟩
@@ -25,7 +25,7 @@ record ℚ⁺ : Set where
 open ℚ⁺
 
 infix  4 _≃_ -- _≠_
-infix 4 _≤_ -- _<_ _≥_ _>_ _≰_ _≱_ _≮_ _≯_
+infix 4 _≤_ _≰_ -- _<_ _≥_ _>_ _≰_ _≱_ _≮_ _≯_
 infix  8 1/_ _/2
 infixl 7 _*_
 infixl 6 _+_
@@ -76,6 +76,12 @@ data _≤_ : ℚ⁺ → ℚ⁺ → Set where
 
 data _<_ : ℚ⁺ → ℚ⁺ → Set where
   r<r : ∀ {q r} → q .rational ℚ.< r .rational → q < r
+
+_≰_ : Rel ℚ⁺ 0ℓ
+x ≰ y = ¬ (x ≤ y)
+
+_≥_ : Rel ℚ⁺ 0ℓ
+x ≥ y = y ≤ x
 
 ------------------------------------------------------------------------
 -- Properties of the equivalence
@@ -148,6 +154,40 @@ module ≤-Reasoning where
     <-≤-trans
     ≤-<-trans
     public
+
+≰⇒≥ : _≰_ ⇒ _≥_
+≰⇒≥ q≰r = r≤r (ℚ.<⇒≤ (ℚ.≰⇒> (λ x₁ → q≰r (r≤r x₁))))
+
+------------------------------------------------------------------------
+-- Deciding the order and ⊓
+open import Relation.Nullary using (yes; no; Dec)
+import Relation.Nullary.Decidable as Dec
+open import Data.Bool.Base using (Bool; if_then_else_)
+
+_≤?_ : (q r : ℚ⁺) → Dec (q ≤ r)
+q ≤? r with q .rational ℚ.≤? r .rational
+... | yes q≤r = yes (r≤r q≤r)
+... | no q≰r  = no (λ { (r≤r q≤r) → q≰r q≤r })
+
+_⊓_ : ℚ⁺ → ℚ⁺ → ℚ⁺
+q ⊓ r with q ≤? r
+... | yes _ = q
+... | no _ = r
+
+⊓-least-1 : ∀ q r → (q ⊓ r) ≤ q
+⊓-least-1 q r with q ≤? r
+... | yes _ = ≤-refl
+... | no q≰r = ≰⇒≥ q≰r
+
+⊓-least-2 : ∀ q r → (q ⊓ r) ≤ r
+⊓-least-2 q r with q ≤? r
+... | yes q≤r = q≤r
+... | no q≰r = ≤-refl
+
+⊓-selective : ∀ q r → (q ⊓ r) ≃ q ⊎ (q ⊓ r) ≃ r
+⊓-selective q r with q ≤? r
+... | yes _ = inj₁ ≃-refl
+... | no _ = inj₂ ≃-refl
 
 ------------------------------------------------------------------------
 -- Properties of _+_

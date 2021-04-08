@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 open import Algebra
 
 module CommutativeSemigroupSolver {m₁ m₂} (G : CommutativeSemigroup m₁ m₂) where
