@@ -15,7 +15,7 @@ This is all work in progress, but here's the table of contents / plan / aspirati
   - The rationals form a metric space [metric2/rationals](metric2/rationals.agda), whose completion is the (full) real numbers. This is mostly unfinished.
   - It has a monad of convex combinations [metric2/convex-alg](metric2/convex-alg.agda), i.e. a probability distribution monad. The basic idea follows the Quantitative Algebraic Theories of Mardare, Panangaden and Plotkin. This should allow an integration operator, following the work of O'Connor and Spitters.
 
-The Agda files are being developed with Agda 2.6.1 and standard library 1.5.
+The Agda files are being developed with Agda 2.6.1 and standard library 1.6.
 
 ## References
 

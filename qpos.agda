@@ -159,7 +159,7 @@ module ≤-Reasoning where
 ≰⇒≥ q≰r = r≤r (ℚ.<⇒≤ (ℚ.≰⇒> (λ x₁ → q≰r (r≤r x₁))))
 
 ------------------------------------------------------------------------
--- Deciding the order and ⊓
+-- Deciding the order and ⊓ and ⊔
 open import Relation.Nullary using (yes; no; Dec)
 import Relation.Nullary.Decidable as Dec
 open import Data.Bool.Base using (Bool; if_then_else_)
@@ -174,13 +174,13 @@ q ⊓ r with q ≤? r
 ... | yes _ = q
 ... | no _ = r
 
-⊓-least-1 : ∀ q r → (q ⊓ r) ≤ q
-⊓-least-1 q r with q ≤? r
+⊓-lower-1 : ∀ q r → (q ⊓ r) ≤ q
+⊓-lower-1 q r with q ≤? r
 ... | yes _ = ≤-refl
 ... | no q≰r = ≰⇒≥ q≰r
 
-⊓-least-2 : ∀ q r → (q ⊓ r) ≤ r
-⊓-least-2 q r with q ≤? r
+⊓-lower-2 : ∀ q r → (q ⊓ r) ≤ r
+⊓-lower-2 q r with q ≤? r
 ... | yes q≤r = q≤r
 ... | no q≰r = ≤-refl
 
@@ -188,6 +188,21 @@ q ⊓ r with q ≤? r
 ⊓-selective q r with q ≤? r
 ... | yes _ = inj₁ ≃-refl
 ... | no _ = inj₂ ≃-refl
+
+_⊔_ : ℚ⁺ → ℚ⁺ → ℚ⁺
+q ⊔ r with q ≤? r
+... | yes _ = r
+... | no _ = q
+
+⊔-upper-1 : ∀ q r → q ≤ (q ⊔ r)
+⊔-upper-1 q r with q ≤? r
+... | yes q≤r = q≤r
+... | no q≰r = ≤-refl
+
+⊔-upper-2 : ∀ q r → r ≤ (q ⊔ r)
+⊔-upper-2 q r with q ≤? r
+... | yes q≤r = ≤-refl
+... | no q≰r = ≰⇒≥ q≰r
 
 ------------------------------------------------------------------------
 -- Properties of _+_

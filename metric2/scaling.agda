@@ -24,7 +24,7 @@ open _≈f_
     rational+ ε * X .dist x x
   ≤⟨ *-mono-≤ ≤-refl (X .refl) ⟩
     rational+ ε * 0ℝ
-  ≈⟨ *-zeroˡ (rational+ ε) (rational+<∞ ε) ⟩
+  ≈⟨ *-zeroʳ (rational+ ε) (rational+<∞ ε) ⟩
     0ℝ
   ∎
   where open ≤-Reasoning
@@ -57,7 +57,7 @@ map-cong {ε}{X}{Y} {f₁}{f₂} f₁≈f₂ .f≈f x =
     rational+ ε * Y .dist (f₁ .fun x) (f₂ .fun x)
   ≤⟨ *-mono-≤ ≤-refl (f₁≈f₂ .f≈f x) ⟩
     rational+ ε * 0ℝ
-  ≈⟨ *-zeroˡ (rational+ ε) (rational+<∞ ε) ⟩
+  ≈⟨ *-zeroʳ (rational+ ε) (rational+<∞ ε) ⟩
     0ℝ
   ∎
   where open ≤-Reasoning

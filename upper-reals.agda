@@ -47,11 +47,9 @@ record ℝᵘ : Set₁ where
   field
     contains : ℚ⁺ → Set
     upper    : ∀ {q₁ q₂} → q₁ ℚ⁺.≤ q₂ → contains q₁ → contains q₂
-    closed   : ∀ {q} → (∀ r → contains (q ℚ⁺.+ r)) → contains q
+    closed   : ∀ {q} → (∀ r → contains (q ℚ⁺.+ r)) → contains q -- FIXME: work out what this is really doing. It seems to be some kind of Archimedian principle (no infinitesimals below every element)
   -- FIXME: do we need locatedness?
 open ℝᵘ
-
--- FIXME: why not rounded sets?
 
 ------------------------------------------------------------------------------
 record _≤_ (x y : ℝᵘ) : Set where
@@ -334,7 +332,6 @@ rational-+ q r 0≤q 0≤r .proj₂ .*≤* {ε} q+r∋ε =
   ∎
   where open ℚ.≤-Reasoning
 
--- FIXME: need this to work for all non-negative rationals
 rational⁺-* : ∀ q r → (rational+ q * rational+ r) ≃ rational+ (q ℚ⁺.* r)
 rational⁺-* q r .proj₁ .*≤* {ε} qr≤ε s =
   q ,
@@ -378,16 +375,25 @@ rational⁺-+ q r =
   ∎
   where open ≤-Reasoning
 
--- TODO:
--- x + ∞ = ∞
--- x * ∞ = ∞
-
 -- FIXME: this is also true for rational
 rational+<∞ : ∀ q → rational+ q < ∞
 rational+<∞ q = q , ℚ.≤-refl , (λ x → x)
 
-*-zeroˡ : ∀ x → x < ∞ → (x * 0ℝ) ≃ 0ℝ
-*-zeroˡ x (ε₁ , x∋ε₁ , _) .proj₁ .*≤* {ε} tt s =
+module _ where
+  open import Data.Integer
+  open import Data.Nat
+
+  0≤1 : 0ℚ ℚ.≤ 1ℚ
+  0≤1 = ℚ.*≤* (+≤+ z≤n)
+
+rational<∞ : ∀ q → rational q < ∞
+rational<∞ q with ℚ.<-cmp 0ℚ q
+... | Relation.Binary.tri< a ¬b ¬c = rational+<∞ qpos.⟨ q , (ℚ.positive a) ⟩
+... | Relation.Binary.tri≈ ¬a b ¬c = ℚ⁺.1ℚ⁺ , ℚ.≤-trans (ℚ.≤-reflexive (ℚ.≃-sym b)) 0≤1 , λ x → x
+... | Relation.Binary.tri> ¬a ¬b c = ℚ⁺.1ℚ⁺ , ℚ.<⇒≤ (ℚ.<-≤-trans c 0≤1) , λ x → x
+
+*-zeroʳ : ∀ x → x < ∞ → (x * 0ℝ) ≃ 0ℝ
+*-zeroʳ x (ε₁ , x∋ε₁ , _) .proj₁ .*≤* {ε} tt s =
   ε₁ ,
   1/ ε₁ qpos.* (ε qpos.+ s) ,
   (begin
@@ -402,7 +408,69 @@ rational+<∞ q = q , ℚ.≤-refl , (λ x → x)
   x∋ε₁ ,
   tt
   where open ℚ⁺.≤-Reasoning
-*-zeroˡ x x<∞ .proj₂ = 0-least (x * 0ℝ)
+*-zeroʳ x x<∞ .proj₂ = 0-least (x * 0ℝ)
+
+*-zeroˡ : ∀ x → x < ∞ → (0ℝ * x) ≃ 0ℝ
+*-zeroˡ x x<∞ = ≃-trans (*-comm 0ℝ x) (*-zeroʳ x x<∞)
+
+rational-* : ∀ q r → 0ℚ ℚ.≤ q → 0ℚ ℚ.≤ r → (rational q * rational r) ≃ rational (q ℚ.* r)
+rational-* q r 0≤q 0≤r with ℚ.<-cmp 0ℚ q
+... | Relation.Binary.tri≈ _ q≃0 _ =
+  begin-equality
+    rational q * rational r
+  ≈⟨ *-cong (rational-cong (ℚ.≃-sym q≃0)) ≃-refl ⟩
+    rational 0ℚ * rational r
+  ≈⟨ *-cong rational-0 ≃-refl ⟩
+    0ℝ * rational r
+  ≈⟨ *-zeroˡ (rational r) (rational<∞ r) ⟩
+    0ℝ
+  ≈⟨ ≃-sym rational-0 ⟩
+    rational 0ℚ
+  ≈⟨ rational-cong (ℚ.≃-sym (ℚ.*-zeroˡ r)) ⟩
+    rational (0ℚ ℚ.* r)
+  ≈⟨ rational-cong (ℚ.*-cong q≃0 (ℚ.≃-refl {r})) ⟩
+    rational (q ℚ.* r)
+  ∎
+  where open ≤-Reasoning
+... | Relation.Binary.tri> _ _ q<0 = Data.Empty.⊥-elim (ℚ.<⇒≱ q<0 0≤q)
+... | Relation.Binary.tri< 0<q _ _ with ℚ.<-cmp 0ℚ r
+... | Relation.Binary.tri≈ _ r≃0 _ =
+  begin-equality
+    rational q * rational r
+  ≈⟨ *-cong ≃-refl (rational-cong (ℚ.≃-sym r≃0)) ⟩
+    rational q * rational 0ℚ
+  ≈⟨ *-cong ≃-refl rational-0 ⟩
+    rational q * 0ℝ
+  ≈⟨ *-zeroʳ (rational q) (rational<∞ q) ⟩
+    0ℝ
+  ≈⟨ ≃-sym rational-0 ⟩
+    rational 0ℚ
+  ≈⟨ rational-cong (ℚ.≃-sym (ℚ.*-zeroʳ q)) ⟩
+    rational (q ℚ.* 0ℚ)
+  ≈⟨ rational-cong (ℚ.*-cong (ℚ.≃-refl {q}) r≃0) ⟩
+    rational (q ℚ.* r)
+  ∎
+  where open ≤-Reasoning
+... | Relation.Binary.tri> _ _ r<0 = Data.Empty.⊥-elim (ℚ.<⇒≱ r<0 0≤r)
+... | Relation.Binary.tri< 0<r _ _ =
+  begin-equality
+    (rational q * rational r)
+  ≈⟨ rational⁺-* qpos.⟨ q , ℚ.positive 0<q ⟩ qpos.⟨ r , ℚ.positive 0<r ⟩ ⟩
+    rational (q ℚ.* r)
+  ∎
+  where open ≤-Reasoning
+
+*-infinityʳ : ∀ x → (x * ∞) ≃ ∞
+*-infinityʳ x .proj₁ = ∞-greatest _
+*-infinityʳ x .proj₂ .*≤* {ε} x∞∋ε =
+  let _ , _ , _ , _ , ϕ = x∞∋ε ℚ⁺.1ℚ⁺ in
+  ϕ
+
++-infinityʳ : ∀ x → (x + ∞) ≃ ∞
++-infinityʳ x .proj₁ = ∞-greatest _
++-infinityʳ x .proj₂ .*≤* {ε} x+∞∋ε =
+  let _ , _ , _ , _ , ϕ = x+∞∋ε ℚ⁺.1ℚ⁺ in
+  ϕ
 
 1ℝ : ℝᵘ
 1ℝ = rational 1ℚ
@@ -504,7 +572,7 @@ rational+<∞ q = q , ℚ.≤-refl , (λ x → x)
     (ε₁₁ ℚ⁺.+ ε₂₁) ℚ⁺.* (ε₁₂ ℚ⁺.⊓ ε₂₂)
   ≈⟨ ℚ⁺.*-distribʳ-+ (ε₁₂ ℚ⁺.⊓ ε₂₂) ε₁₁ ε₂₁ ⟩
     ε₁₁ ℚ⁺.* (ε₁₂ ℚ⁺.⊓ ε₂₂) ℚ⁺.+ ε₂₁ ℚ⁺.* (ε₁₂ ℚ⁺.⊓ ε₂₂)
-  ≤⟨ qpos.+-mono-≤ (qpos.*-mono-≤ (qpos.≤-refl {ε₁₁}) (qpos.⊓-least-1 ε₁₂ ε₂₂)) (qpos.*-mono-≤ (qpos.≤-refl {ε₂₁}) (qpos.⊓-least-2 ε₁₂ ε₂₂)) ⟩
+  ≤⟨ qpos.+-mono-≤ (qpos.*-mono-≤ (qpos.≤-refl {ε₁₁}) (qpos.⊓-lower-1 ε₁₂ ε₂₂)) (qpos.*-mono-≤ (qpos.≤-refl {ε₂₁}) (qpos.⊓-lower-2 ε₁₂ ε₂₂)) ⟩
     ε₁₁ ℚ⁺.* ε₁₂ ℚ⁺.+ ε₂₁ ℚ⁺.* ε₂₂
   ≤⟨ qpos.+-mono-≤ ε₁₁ε₁₂≤ε₁+ ε₂₁ε₂₂≤ε₂+ ⟩
     (ε₁ ℚ⁺.+ s /2 /2) ℚ⁺.+ (ε₂ ℚ⁺.+ s /2 /2)
@@ -570,6 +638,7 @@ rational+<∞ q = q , ℚ.≤-refl , (λ x → x)
   where open ≤-Reasoning
 
 
+------------------------------------------------------------------------------
 -- reciprocal?
 -- would we have 1/ 0 = ∞ ?
 {-
@@ -778,6 +847,12 @@ residual-2 x y z x≤y+z .*≤* {ε} z∋ε ε' y∋ε' =
   y∋ε' ,
   z∋ε
 
+{-
+⊝-curry : ∀ x y z → ((x ⊝ y) ⊝ z) ≃ (x ⊝ (y + z))
+⊝-curry x y z .proj₁ = residual-2 _ _ _ (residual-2 _ _ _ (≤-trans {!!} (≤-reflexive (+-assoc y z (x ⊝ (y + z))))))
+⊝-curry x y z .proj₂ = residual-2 {!!} {!!} {!!} {!!}
+-}
+
 ------------------------------------------------------------------------------
 -- FIXME: this is the old truncating subtraction, just for rationals
 _⊖_ : ℝᵘ → ℚ⁺ → ℝᵘ
@@ -908,6 +983,7 @@ sup-mono-≤ f S₁≤S₂ = sup-least λ i → ≤-trans (S₁≤S₂ i) (sup-u
 sup-+ : ∀ {I J} {S₁ : I → ℝᵘ} {S₂ : J → ℝᵘ} → sup (I × J) (λ ij → S₁ (proj₁ ij) + S₂ (proj₂ ij)) ≤ (sup I S₁ + sup J S₂)
 sup-+ = sup-least λ i → +-mono-≤ (sup-upper _) (sup-upper _)
 
+-- An archimedian principle: there are no elements infinitesimally below 'y'
 approximate : ∀ y → y ≤ sup ℚ⁺ (λ ε → y ⊖ ε)
 approximate y .*≤* h = y .closed h
 -- FIXME: closedness is now a consequence of this
@@ -933,16 +1009,39 @@ inf-greatest {I}{S}{x} h .*≤* {ε} infIS∋ε =
   let i , Si∋ε+s = infIS∋ε s in
   h i .*≤* Si∋ε+s
 
--- FIXME: show that mimimum of the empty set is ∞
+-- Another statement of the archimedian principle? But this doesn't
+-- use .closed? Maybe that's because it is specialised to 0?
+inf-ℚ⁺ : inf ℚ⁺ rational+ ≃ 0ℝ
+inf-ℚ⁺ .proj₁ .*≤* {ε} tt s = ε , qpos.fog-mono (ℚ⁺.+-increasing {ε} {s})
+inf-ℚ⁺ .proj₂ = 0-least _
+
+inf-empty : inf ⊥ (λ ()) ≃ ∞
+inf-empty .proj₁ = ∞-greatest _
+inf-empty .proj₂ = inf-greatest (λ ())
+
 -- FIXME: show that it distributes over +
 
 ------------------------------------------------------------------------------
 {-
 sqrt : ℝᵘ → ℝᵘ
-sqrt x .contains q = x .contains (q qpos.* q)
-sqrt x .upper = {!!}
-sqrt x .closed h = x .closed (λ s → x .upper {!!} {!!})
+sqrt x = inf (Σ[ ε ∈ ℚ⁺ ] (x ≤ rational+ (ε ℚ⁺.* ε))) (λ x → rational+ (x .proj₁))
 
+sqrt-correct : ∀ x → (sqrt x * sqrt x) ≃ x
+sqrt-correct x .proj₁ .*≤* {ε} x∋ε = λ s → {!!}
+sqrt-correct x .proj₂ .*≤* {ε} rx*rx∋ε =
+  x .closed λ r →
+  let ε₁ , ε₂ , ε₁ε₂≤ε+s , rx∋ε₁ , ry∋ε₂ = rx*rx∋ε r in
+  inf-greatest {S = λ x → rational+ (x .proj₁)} {!!} .*≤* {ε ℚ⁺.+ r} {!!}
+-}
+
+{-
+sqrt : ℝᵘ → ℝᵘ
+sqrt x .contains q = ∀ δ → x .contains (q qpos.* q qpos.+ δ)
+sqrt x .upper q₁≤q₂ = {!!} -- x .upper (qpos.*-mono-≤ q₁≤q₂ q₁≤q₂)
+sqrt x .closed {q} h = {!!} -- x .closed (λ s → x .upper {!!} (h (s qpos.* 1/ q)))
+-}
+
+{-
 sqrt-correct : ∀ x → (sqrt x * sqrt x) ≃ x
 sqrt-correct x .proj₁ .*≤* {q} x-q s = {!!} -- need to compute rational square root to within 's' !!!
 sqrt-correct x .proj₂ .*≤* sxsx-q = x .closed λ r →
