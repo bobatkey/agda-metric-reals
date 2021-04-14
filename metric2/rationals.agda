@@ -15,11 +15,18 @@ open _≈f_
 module _ where
   import Data.Integer as ℤ
   import Data.Nat as ℕ
+  open import Relation.Binary.PropositionalEquality
 
   0≤∣p∣ : ∀ p → 0ℚ ℚ.≤ ℚ.∣ p ∣
   0≤∣p∣ (ℚ.mkℚᵘ (ℤ.+ ℕ.zero) _)    = ℚ.*≤* (ℤ.+≤+ ℕ.z≤n)
   0≤∣p∣ (ℚ.mkℚᵘ (ℤ.+ (ℕ.suc n)) _) = ℚ.*≤* (ℤ.+≤+ ℕ.z≤n)
   0≤∣p∣ (ℚ.mkℚᵘ (ℤ.-[1+ n ]) _)     = ℚ.*≤* (ℤ.+≤+ ℕ.z≤n)
+
+  ∣∣p∣∣≡∣p∣ : ∀ p → ℚ.∣ ℚ.∣ p ∣ ∣ ≡ ℚ.∣ p ∣
+  ∣∣p∣∣≡∣p∣ p = ℚ.0≤p⇒∣p∣≡p (0≤∣p∣ p)
+
+  ∣∣p∣∣≃∣p∣ : ∀ p → ℚ.∣ ℚ.∣ p ∣ ∣ ℚ.≃ ℚ.∣ p ∣
+  ∣∣p∣∣≃∣p∣ p = ℚ.≃-reflexive (∣∣p∣∣≡∣p∣ p)
 
 ℚspc : MSpc
 ℚspc .Carrier = ℚ
