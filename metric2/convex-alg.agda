@@ -1,8 +1,11 @@
 module metric2.convex-alg where
 
-open import Data.Product using (_,_)
-
+open import Data.Product using (_,_; Σ-syntax; proj₁; proj₂; _×_)
+open import Data.Unit using (tt)
+import Data.Integer as ℤ
+import Data.Nat as ℕ
 open import Data.Rational.Unnormalised as ℚ using () renaming (ℚᵘ to ℚ; 0ℚᵘ to 0ℚ; 1ℚᵘ to 1ℚ)
+import Data.Rational.Unnormalised.Properties as ℚ
 open import metric2.base
 
 import upper-reals
@@ -12,30 +15,68 @@ open MSpc
 
 record ℚ⟨0,1⟩ : Set where
   field
-    rational : ℚ⁺
-    upper    : rational ℚ⁺.< 1ℚ⁺
+    num : ℚ
+    0<n : 0ℚ ℚ.< num
+    n<1 : num ℚ.< 1ℚ
+  pos : ℚ⁺
+  pos = ℚ⁺.⟨ num , ℚ.positive 0<n ⟩
 open ℚ⟨0,1⟩
 
-data _≃_ : ℚ⟨0,1⟩ → ℚ⟨0,1⟩ → Set where
-  *≃* : ∀ {q r} → q .rational ℚ⁺.≃ r .rational → q ≃ r
+½ : ℚ⟨0,1⟩
+½ .num = ℚ.½
+½ .0<n = ℚ.*<* (ℤ.+<+ (ℕ.s≤s ℕ.z≤n))
+½ .n<1 = ℚ.*<* (ℤ.+<+ (ℕ.s≤s (ℕ.s≤s ℕ.z≤n)))
+
+record _≃_ (q r : ℚ⟨0,1⟩) : Set where
+  field
+    n≃n : q .num ℚ.≃ r .num
 
 _*_ : ℚ⟨0,1⟩ → ℚ⟨0,1⟩ → ℚ⟨0,1⟩
-(q * r) .rational = q .rational ℚ⁺.* r .rational
-(q * r) .upper = begin-strict
-                   q .rational ℚ⁺.* r .rational
-                     <⟨ ℚ⁺.*-mono-< (q .upper) (r .upper) ⟩
-                   1ℚ⁺ ℚ⁺.* 1ℚ⁺
-                     ≈⟨ ℚ⁺.*-identityʳ 1ℚ⁺ ⟩
-                   1ℚ⁺
-                 ∎
-  where open ℚ⁺.≤-Reasoning
+(q * r) .num = q .num ℚ.* r .num
+(q * r) .0<n =
+  begin-strict
+    0ℚ
+  ≈⟨ ℚ.≃-sym (ℚ.*-zeroˡ (r .num)) ⟩
+    0ℚ ℚ.* r .num
+  <⟨ ℚ.*-monoˡ-<-pos (ℚ.positive (r .0<n)) (q .0<n) ⟩
+    q .num ℚ.* r .num
+  ∎
+  where open ℚ.≤-Reasoning
+(q * r) .n<1 =
+  begin-strict
+    q .num ℚ.* r .num
+  <⟨ ℚ.*-monoˡ-<-pos (ℚ.positive (r .0<n)) (q .n<1) ⟩ -- ℚ.*-monoˡ-≤-nonNeg (ℚ.nonNegative (r .0≤n)) (q .n≤1) ⟩
+    1ℚ ℚ.* r .num
+  <⟨ ℚ.*-monoʳ-<-pos {r = 1ℚ} tt (r .n<1) ⟩
+    1ℚ ℚ.* 1ℚ
+  ≈⟨ ℚ.*-identityˡ 1ℚ ⟩
+    1ℚ
+  ∎
+  where open ℚ.≤-Reasoning
 
 1-_ : ℚ⟨0,1⟩ → ℚ⟨0,1⟩
-1- q = {!!}
-
-_/_ : ℚ⟨0,1⟩ → ℚ⟨0,1⟩ → ℚ⟨0,1⟩
-(q / r) .rational = q .rational ℚ⁺.* (ℚ⁺.1/ r .rational)
-(q / r) .upper = {!!}
+(1- q) .num = 1ℚ ℚ.- q .num
+(1- q) .0<n =
+  begin-strict
+    0ℚ
+  ≈⟨ ℚ.≃-sym (ℚ.+-inverseʳ (q .num)) ⟩
+    q .num ℚ.- q .num
+  <⟨ ℚ.+-monoˡ-< (ℚ.- q .num) (q .n<1) ⟩
+    1ℚ ℚ.- q .num
+  ∎
+  where open ℚ.≤-Reasoning
+(1- q) .n<1 =
+  begin-strict
+    1ℚ ℚ.- q .num
+  <⟨ ℚ.+-monoʳ-< 1ℚ (ℚ.neg-mono-< (q .0<n)) ⟩
+    1ℚ ℚ.- 0ℚ
+  ≈⟨ ℚ.+-congʳ 1ℚ ε⁻¹≈ε ⟩
+    1ℚ ℚ.+ 0ℚ
+  ≈⟨ ℚ.+-identityʳ 1ℚ ⟩
+    1ℚ
+  ∎
+  where open ℚ.≤-Reasoning
+        open import Algebra.Properties.Group (ℚ.+-0-group)
 
 module _ (X : MSpc) where
 
@@ -53,53 +94,103 @@ module _ (X : MSpc) where
     tm-idem  : ∀ {t q ε} → within (split t q t) ε t
     tm-assoc : ∀ {s t u q₁ q₂ q₁' q₂' ε} →
                  q₁' ≃ (q₁ * q₂) →
-                 q₂' ≃ ((q₁ * (1- q₂)) / (1- (q₁ * q₂))) →
+                 ((1- (q₁ * q₂)) * q₂') ≃ (q₁ * (1- q₂)) →
                  within (split (split s q₁ t) q₂ u)
                         ε
                         (split s q₁' (split t q₂' u))
     tm-dist  : ∀ {s₁ s₂ t₁ t₂ ε₁ ε₂ ε q} →
                  within s₁ ε₁ t₁ →
                  within s₂ ε₂ t₂ →
-                 ε ℚ⁺.≃ ε₁ ℚ⁺.* q .rational ℚ⁺.+ ε₂ ℚ⁺.* (1- q) .rational →
+                 -- this is what gives us the Kantorovich metric between them
+                 ε ℚ⁺.≃ ε₁ ℚ⁺.* pos q ℚ⁺.+ ε₂ ℚ⁺.* pos (1- q) →
                  within (split s₁ q s₂) ε (split t₁ q t₂)
-    -- FIXME: also add tm-comm ???
+    -- FIXME: also add tm-comm ??? and tm-zero
+    -- is the only difference between probability distributions and step functions commutativity?
 
-  open upper-reals.ℝᵘ
+  open upper-reals
 
   -- a metric space!
   𝕋 : MSpc
   𝕋 .Carrier = term
-  𝕋 .dist s t .contains ε = within s ε t
-  𝕋 .dist s t .upper = tm-wk
-  𝕋 .dist s t .closed = tm-arch
-  𝕋 .refl = record { *≤* = λ _ → tm-refl }
-  𝕋 .sym = record { *≤* = λ {ε} y-ε-x → tm-sym y-ε-x }
-  𝕋 .triangle = record { *≤* = λ {ε} xy-yz → tm-arch (λ δ → let ε₁ , ε₂ , ε₁+ε₂≤ε+s , p , q = xy-yz δ in
-                                                              tm-wk ε₁+ε₂≤ε+s (tm-trans p q)) }
+  𝕋 .dist s t = inf (Σ[ ε ∈ ℚ⁺ ] (within s ε t)) (λ p → rational+ (p .proj₁))
+  𝕋 .refl =
+    ≤-trans
+      (inf-greatest (λ i → inf-lower ((i .proj₁) , tm-refl)))
+      (≤-reflexive (≃-sym (approx 0ℝ)))
+  𝕋 .sym = inf-greatest (λ p → inf-lower (p .proj₁ , tm-sym (p .proj₂)))
+  𝕋 .triangle {s}{t}{u} =
+    begin
+      𝕋 .dist s u
+    ≤⟨ inf-greatest (λ { ((ε₁ , s-t)  , (ε₂ , t-u)) → ≤-trans (inf-lower (ε₁ ℚ⁺.+ ε₂ , tm-trans s-t t-u)) (≤-reflexive (≃-sym (rational⁺-+ ε₁ ε₂))) }) ⟩
+      inf ((Σ[ ε ∈ ℚ⁺ ] (within s ε t)) × (Σ[ ε ∈ ℚ⁺ ] (within t ε u))) (λ p → rational+ (p .proj₁ .proj₁) + rational+ (p .proj₂ .proj₁))
+    ≈⟨ inf-+ ⟩
+      𝕋 .dist s t + 𝕋 .dist t u
+    ∎
+    where open ≤-Reasoning
 
 open _⇒_
+
+open upper-reals
 
 -- Messy!
 unit : ∀ {X} → X ⇒ 𝕋 X
 unit .fun x = η x
 unit {X} .non-expansive {a}{b} =
-  record { *≤* = λ x → tm-var (record { *≤* = λ x₁ → X .dist a b .upper-reals.ℝᵘ.upper (ℚ⁺.r≤r x₁) x }) }
+  ≤-trans
+    (inf-greatest (λ i → inf-lower ((i .proj₁) , (tm-var (i .proj₂)))))
+    (≤-reflexive (≃-sym (approx (dist X a b))))
 
+{-
 -- FIXME: join
+join : ∀ {X} → 𝕋 (𝕋 X) ⇒ 𝕋 X
+join .fun = {!!}
+join .non-expansive = {!!}
+-}
 
 -- FIXME: map
 
 -- FIXME: monoidal
 
-{-
--- Integration is definable for any 𝕋-algebra?
+-- FIXME: completion distributes over 𝕋
 
+open import Data.Nat using (ℕ; zero; suc)
+open import metric2.rationals
+
+step-identity : ℕ → ℚ → ℚ → term ℚspc
+step-identity ℕ.zero q a = η q
+step-identity (suc n) q a =
+  let a = ℚ.½ ℚ.* a in
+  split (step-identity n (q ℚ.- a) a) ½ (step-identity n (q ℚ.+ a) a)
+-- then start it with ½
+
+-- _ = {!step-identity 3 ℚ.½ ℚ.½!}
+
+-- Then define 'uniform : 𝒞 (term ℚspc)' as a regular function
 
 
 sum : term ℚspc → ℚspc .Carrier
-sum t = ?
+sum (η x) = x
+sum (split t₁ q t₂) = q .num ℚ.* sum t₁ ℚ.+ (1ℚ ℚ.- q .num) ℚ.* sum t₂
 
-sum-ne : ∀ {ε s t} → within s ε t → abs (sum s ℚ.- sum t) ℚ.≤ fog ε
+-- _ = {! sum (step-identity 5 ℚ.½ ℚ.½) !}
+
+-- and sum is non-expansive
+
+
+sum-ne : ∀ {ε s t} → within ℚspc s ε t → ℚ.∣ sum s ℚ.- sum t ∣ ℚ.≤ ℚ⁺.fog ε
+sum-ne (tm-wk x p) = {!!}
+sum-ne tm-refl = {!!}
+sum-ne (tm-sym p) = {!!}
+sum-ne (tm-trans p p₁) = {!!}
+sum-ne (tm-arch x) = {!!}
+sum-ne (tm-var x) = {!!}
+sum-ne tm-idem = {!!}
+sum-ne (tm-assoc x x₁) = {!!}
+sum-ne (tm-dist p p₁ eq) = {!!}
+
+
+{-
+-- Integration is definable for any 𝕋-algebra?
 -}
 
   -- axioms:
