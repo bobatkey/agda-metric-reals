@@ -48,7 +48,7 @@ record ℝᵘ : Set₁ where
     contains : ℚ⁺ → Set
     upper    : ∀ {q₁ q₂} → q₁ ℚ⁺.≤ q₂ → contains q₁ → contains q₂
     closed   : ∀ {q} → (∀ r → contains (q ℚ⁺.+ r)) → contains q -- FIXME: work out what this is really doing. It seems to be some kind of Archimedian principle (no infinitesimals below every element)
-  -- FIXME: do we need locatedness?
+  -- FIXME: do we need locatedness? what would this mean?
 open ℝᵘ
 
 ------------------------------------------------------------------------------
@@ -561,7 +561,7 @@ rational-* q r 0≤q 0≤r with ℚ.<-cmp 0ℚ q
   λ r → ε₁₂ , ε₂ , ℚ⁺.+-increasing , y∋ε₁₂ , z∋ε₂
   where open ℚ⁺.≤-Reasoning
 
-*-distribʳ-+ : ∀ x y z → ((y + z) * x) ≃ ((y * x) + (z * x)) -- _DistributesOverʳ_ _≃_ _*_ _+_
+*-distribʳ-+ : ∀ x y z → ((y + z) * x) ≃ ((y * x) + (z * x))
 *-distribʳ-+ x y z .proj₁ .*≤* {ε} yx+zx∋ε s =
   let ε₁ , ε₂ , ε₁+ε₂≤ε+ , yx∋ε₁ , zx∋ε₂ = yx+zx∋ε (s /2) in
   let ε₁₁ , ε₁₂ , ε₁₁ε₁₂≤ε₁+ , y∋ε₁₁ , x∋ε₁₂ = yx∋ε₁ (s /2 /2) in
@@ -986,7 +986,21 @@ sup-+ = sup-least λ i → +-mono-≤ (sup-upper _) (sup-upper _)
 -- An archimedian principle: there are no elements infinitesimally below 'y'
 approximate : ∀ y → y ≤ sup ℚ⁺ (λ ε → y ⊖ ε)
 approximate y .*≤* h = y .closed h
--- FIXME: closedness is now a consequence of this
+-- FIXME: “closedness” above is now a consequence of this
+
+{- -- this isn't true... cannot approximate numbers from below in this system
+sup-approx : ∀ y → y ≃ sup (Σ[ q ∈ ℚ⁺ ] (rational+ q ≤ y)) (λ i → rational+ (i .proj₁))
+sup-approx y .proj₁ .*≤* {ε} h = {!!}
+sup-approx y .proj₂ = sup-least (λ i → i .proj₂)
+-}
+
+sup-0 : sup ⊥ (λ ()) ≃ 0ℝ
+sup-0 .proj₁ .*≤* tt ()
+sup-0 .proj₂ .*≤* = {!!}
+
+{-
+-- is there a rational between (y ⊖ ε) and y? how could make sure there is? open sets?
+-}
 
 ------------------------------------------------------------------------------
 -- infima
@@ -1019,7 +1033,49 @@ inf-empty : inf ⊥ (λ ()) ≃ ∞
 inf-empty .proj₁ = ∞-greatest _
 inf-empty .proj₂ = inf-greatest (λ ())
 
--- FIXME: show that it distributes over +
+inf-+ : ∀ {I₁ I₂ S₁ S₂} →
+        inf (I₁ × I₂) (λ i → S₁ (i .proj₁) + S₂ (i .proj₂)) ≃ (inf I₁ S₁ + inf I₂ S₂)
+inf-+ {I₁}{I₂}{S₁}{S₂} .proj₁ .*≤* {ε} ⊓₁+⊓₂∋ε s =
+  let ε₁ , ε₂ , ε₁+ε₂≤ε+ , ⊓₁∋ε₁ , ⊓₂∋ε₂ = ⊓₁+⊓₂∋ε (s /2) in
+  let i₁ , S₁i₁∋ε₁+ = ⊓₁∋ε₁ (s /2 /2) in
+  let i₂ , S₂i₂∋ε₂+ = ⊓₂∋ε₂ (s /2 /2) in
+  (i₁ , i₂) ,
+  λ r → ε₁ ℚ⁺.+ s /2 /2 ,
+         ε₂ ℚ⁺.+ s /2 /2 ,
+         (begin
+           (ε₁ ℚ⁺.+ s /2 /2) ℚ⁺.+ (ε₂ ℚ⁺.+ s /2 /2)
+         ≈⟨ ℚ⁺-interchange ε₁ (s /2 /2) ε₂ (s /2 /2) ⟩
+           (ε₁ ℚ⁺.+ ε₂) ℚ⁺.+ (s /2 /2 ℚ⁺.+ s /2 /2)
+         ≈⟨ ℚ⁺.+-congʳ (ε₁ ℚ⁺.+ ε₂) (ℚ⁺.half+half {s /2}) ⟩
+           (ε₁ ℚ⁺.+ ε₂) ℚ⁺.+ s /2
+         ≤⟨ qpos.+-mono-≤ ε₁+ε₂≤ε+ (ℚ⁺.≤-refl {s /2}) ⟩
+           (ε ℚ⁺.+ s /2) ℚ⁺.+ s /2
+         ≈⟨ qpos.+-assoc ε (s /2) (s /2) ⟩
+           ε ℚ⁺.+ (s /2 ℚ⁺.+ s /2)
+         ≈⟨ qpos.+-congʳ ε (ℚ⁺.half+half {s}) ⟩
+           ε ℚ⁺.+ s
+         ≤⟨ ℚ⁺.+-increasing ⟩
+           ε ℚ⁺.+ s ℚ⁺.+ r
+         ∎) ,
+         S₁i₁∋ε₁+ ,
+         S₂i₂∋ε₂+
+  where open ℚ⁺.≤-Reasoning
+inf-+ {I₁}{I₂}{S₁}{S₂} .proj₂ =
+  inf-greatest (λ i → +-mono-≤ (inf-lower (i .proj₁)) (inf-lower (i .proj₂)))
+
+-- every number can be approximated from above
+approx : ∀ y → y ≃ inf (Σ[ q ∈ ℚ⁺ ] (y ≤ rational+ q)) (λ i → rational+ (i .proj₁))
+approx y .proj₁ = inf-greatest (λ i → i .proj₂)
+approx y .proj₂ .*≤* {ε} y∋ε s =
+  (ε , (record { *≤* = λ x → y .upper (qpos.r≤r x) y∋ε })) , qpos.fog-mono (qpos.+-increasing {ε}{s})
+
+
+as-inf : ∀ x y → (x ⊝ y) ≃ inf (Σ[ q ∈ ℚ⁺ ] (x ≤ (y + rational+ q))) (λ x → rational+ (x .proj₁))
+as-inf x y .proj₁ = inf-greatest (λ i → residual-2 x y (rational+ (i .proj₁)) (i .proj₂))
+as-inf x y .proj₂ =
+  ≤-trans
+    (inf-greatest (λ i → inf-lower ((i .proj₁) , (residual-1 x y (rational+ (i .proj₁)) (i .proj₂)))))
+    (≤-reflexive (≃-sym (approx (x ⊝ y))))
 
 ------------------------------------------------------------------------------
 {-
