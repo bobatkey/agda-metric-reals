@@ -76,9 +76,9 @@ _⊗f_ : ∀ {X X' Y Y'} → X ⇒ X' → Y ⇒ Y' → (X ⊗ Y) ⇒ (X' ⊗ Y')
 
 ------------------------------------------------------------------------------
 -- Swapping
-swap : ∀ {X Y} → (X ⊗ Y) ⇒ (Y ⊗ X)
-swap .fun (x , y) = y , x
-swap .non-expansive = ≤-reflexive (+-comm _ _)
+⊗-symmetry : ∀ {X Y} → (X ⊗ Y) ⇒ (Y ⊗ X)
+⊗-symmetry .fun (x , y) = y , x
+⊗-symmetry .non-expansive = ≤-reflexive (+-comm _ _)
 
 ------------------------------------------------------------------------------
 -- Units

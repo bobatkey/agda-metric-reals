@@ -305,6 +305,27 @@ postulate -- FIXME
 *-inverse : Inverse _≃_ 1ℚ⁺ 1/_ _*_
 *-inverse = *-inverseˡ , *-inverseʳ
 
+1/-invert-≤ : ∀ q r → q ≤ r → 1/ r ≤ 1/ q
+1/-invert-≤ q r q≤r =
+  begin
+    1/ r
+  ≈⟨ ≃-sym (*-identityˡ (1/ r)) ⟩
+    1ℚ⁺ * 1/ r
+  ≈⟨ ≃-sym (*-cong (*-inverseˡ q) ≃-refl) ⟩
+    (1/ q * q) * 1/ r
+  ≤⟨ *-mono-≤ (*-mono-≤ (≤-refl {1/ q}) q≤r) (≤-refl {1/ r}) ⟩
+    (1/ q * r) * 1/ r
+  ≈⟨ *-assoc (1/ q) r (1/ r) ⟩
+    1/ q * (r * 1/ r)
+  ≈⟨ *-cong (≃-refl {1/ q}) (*-inverseʳ r) ⟩
+    1/ q * 1ℚ⁺
+  ≈⟨ *-identityʳ (1/ q) ⟩
+    1/ q
+  ∎
+  where open ≤-Reasoning
+
+
+
 ------------------------------------------------------------------------
 -- _+_ makes ℚ⁺ a commutative semigroup
 
@@ -348,6 +369,11 @@ postulate -- FIXME
 *-1-isAbelianGroup : IsAbelianGroup _≃_ _*_ 1ℚ⁺ 1/_
 *-1-isAbelianGroup = record { isGroup = *-1-isGroup ; comm = *-comm }
 
+*-AbelianGroup : AbelianGroup 0ℓ 0ℓ
+*-AbelianGroup = record
+                   { isAbelianGroup = *-1-isAbelianGroup
+                   }
+
 -- FIXME: bundles
 
 ------------------------------------------------------------------------
@@ -380,11 +406,14 @@ half-≤ q =
 ------------------------------------------------------------------------
 -- fog gof properties
 
-fog-positive : ∀ {q} → 0ℚ ℚ.< fog q
-fog-positive {q} = ℚ.positive⁻¹ (q .positive)
+fog-positive : ∀ q → 0ℚ ℚ.< fog q
+fog-positive q = ℚ.positive⁻¹ (q .positive)
 
-fog-nonneg : ∀ {q} → 0ℚ ℚ.≤ fog q
-fog-nonneg {q} = ℚ.<⇒≤ (fog-positive {q})
+fog-nonneg : ∀ q → 0ℚ ℚ.≤ fog q
+fog-nonneg q = ℚ.<⇒≤ (fog-positive q)
+
+fog-not≤0 : ∀ q → ¬ (fog q ℚ.≤ 0ℚ)
+fog-not≤0 q q≤0 = ℚ.<⇒≢ (ℚ.<-≤-trans (fog-positive q) q≤0) refl
 
 fog-cong : ∀ {q r} → q ≃ r → fog q ℚ.≃ fog r
 fog-cong (r≃r e) = e
@@ -397,6 +426,12 @@ fog-mono (r≤r e) = e
 
 *-fog : ∀ q r → fog (q * r) ℚ.≃ fog q ℚ.* fog r
 *-fog q r = ℚ.*≡* refl
+
+1/-fog : ∀ q q≢0 → ℚ.1/_ (fog q) {q≢0} ℚ.≃ fog (1/ q)
+1/-fog q q≢0 = ℚ.*≡* refl
+
+∣-∣-fog : ∀ q → ℚ.∣ fog q ∣ ℚ.≃ fog q
+∣-∣-fog q = ℚ.0≤p⇒∣p∣≃p (fog-nonneg q)
 
 ------------------------------------------------------------------------------
 -- floor
@@ -425,4 +460,4 @@ nn+pos q r 0≤q .positive =
                           (ℚ.+-monoʳ-< q (ℚ.positive⁻¹ (r .positive)))))
 
 q≤nn+pos : ∀ q (r : ℚ⁺) → q ℚ.≤ q ℚ.+ fog r
-q≤nn+pos q r = ℚ.p≤p+q (ℚ.nonNegative (fog-nonneg {r}))
+q≤nn+pos q r = ℚ.p≤p+q (ℚ.nonNegative (fog-nonneg r))

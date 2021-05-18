@@ -7,10 +7,12 @@ module CommutativeSemigroupSolver {m₁ m₂} (G : CommutativeSemigroup m₁ m�
 open import Data.Maybe as Maybe
 import Relation.Binary.PropositionalEquality as PropositionalEquality
 
-open import Data.Nat using (ℕ)
-open import Data.Fin using (Fin)
+open import Data.Nat using (ℕ; suc)
+open import Data.Fin using (Fin; #_)
 open import Data.Vec as Vec using (Vec)
+open import Data.Vec using (_∷_; []) public
 open import Data.Vec.Properties using (lookup-map)
+open import Relation.Nullary.Decidable.Core using (True)
 
 import MonoidOfSemigroup (G) as M
 import Algebra.Solver.CommutativeMonoid
@@ -75,19 +77,16 @@ prove′ e₁ e₂ =
 prove : ∀ n (e₁ e₂ : Expr' n) → From-just (prove′ e₁ e₂)
 prove _ e₁ e₂ = from-just (prove′ e₁ e₂)
 
-open Data.Fin using (#_)
-open import Data.Vec using (_∷_; []) public
-
-open import Relation.Nullary.Decidable.Core
-open import Data.Nat.Base using (suc)
 import Data.Nat.Properties as ℕₚ
 
 v# : ∀ m {n} {m<n : True (suc m ℕₚ.≤? n)} → Expr' n
 v# m {n} {m<n} = var ((# m) {n} {m<n})
 
+{-
 test : ∀ x y z → (x ∙' y) ∙' z ≈' z ∙' (y ∙' x)
 test a b c =
    prove 3 ((x ⊕ y) ⊕ z) (z ⊕ (y ⊕ x)) (a ∷ b ∷ c ∷ [])
   where x = v# 0
         y = v# 1
         z = v# 2
+-}

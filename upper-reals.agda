@@ -37,7 +37,7 @@ module interchange {c ℓ} (G : CommutativeSemigroup c ℓ)  where
       (a ∙ c) ∙ (b ∙ d)
     ∎
 
-open interchange (qpos.+-commutativeSemigroup) renaming (interchange to ℚ⁺-interchange) public
+open interchange (ℚ⁺.+-commutativeSemigroup) renaming (interchange to ℚ⁺-interchange) public
 open interchange (record
                     { isCommutativeSemigroup = record { isSemigroup = ℚ.+-isSemigroup ; comm = ℚ.+-comm } }) renaming (interchange to ℚ-interchange) public
 
@@ -297,7 +297,7 @@ open interchange (record
                     { isCommutativeSemigroup = record { isSemigroup = record { isMagma = record { isEquivalence = isEquivalence ; ∙-cong = +-cong } ; assoc = +-assoc } ; comm = +-comm } }) public
 
 rational-0 : rational 0ℚ ≃ 0ℝ
-rational-0 .proj₁ .*≤* {q} tt = ℚ⁺.fog-nonneg {q}
+rational-0 .proj₁ .*≤* {q} tt = ℚ⁺.fog-nonneg q
 rational-0 .proj₂ = 0-least _
 
 rational-+ : ∀ q r → 0ℚ ℚ.≤ q → 0ℚ ℚ.≤ r → (rational q + rational r) ≃ rational (q ℚ.+ r)
@@ -351,9 +351,9 @@ rational⁺-* q r .proj₂ .*≤* {ε} qr∋ε =
   let ε₁ , ε₂ , ε₁ε₂≤ε+s , q≤ε₁ , r≤ε₂ = qr∋ε s in
   begin
     qpos.fog q ℚ.* qpos.fog r
-  ≤⟨ ℚ.*-monoʳ-≤-pos {qpos.fog q} (ℚ.positive (qpos.fog-positive {q})) r≤ε₂ ⟩
+  ≤⟨ ℚ.*-monoʳ-≤-pos {qpos.fog q} (ℚ.positive (qpos.fog-positive q)) r≤ε₂ ⟩
     qpos.fog q ℚ.* qpos.fog ε₂
-  ≤⟨ ℚ.*-monoˡ-≤-pos (ℚ.positive (qpos.fog-positive {ε₂})) q≤ε₁ ⟩
+  ≤⟨ ℚ.*-monoˡ-≤-pos (ℚ.positive (qpos.fog-positive ε₂)) q≤ε₁ ⟩
     qpos.fog ε₁ ℚ.* qpos.fog ε₂
   ≈⟨ ℚ.≃-sym (qpos.*-fog ε₁ ε₂) ⟩
     qpos.fog (ε₁ ℚ⁺.* ε₂)
@@ -368,7 +368,7 @@ rational⁺-+ q r =
     rational+ q + rational+ r
   ≈⟨ ≃-refl ⟩
     rational (ℚ⁺.fog q) + rational (ℚ⁺.fog r)
-  ≈⟨ rational-+ (qpos.fog q) (qpos.fog r) (qpos.fog-nonneg {q}) (qpos.fog-nonneg {r}) ⟩
+  ≈⟨ rational-+ (qpos.fog q) (qpos.fog r) (qpos.fog-nonneg q) (qpos.fog-nonneg r) ⟩
     rational (ℚ⁺.fog q ℚ.+ ℚ⁺.fog r)
   ≈⟨ rational-cong (qpos.+-fog q r) ⟩
     rational+ (q ℚ⁺.+ r)
@@ -831,15 +831,15 @@ _⊝_ : ℝᵘ → ℝᵘ → ℝᵘ
         eq : ∀ s → ε qpos.+ s qpos.+ ε' qpos.≃ ε qpos.+ ε' qpos.+ s
         eq s = prove 3 ((a ⊕ b) ⊕ c) ((a ⊕ c) ⊕ b) (ε ∷ s ∷ ε' ∷ [])
 
-residual-1 : ∀ x y z → (x ⊝ y) ≤ z → x ≤ (y + z)
-residual-1 x y z x⊝y≤z .*≤* {ε} y+z∈ε =
+residual-1 : ∀ {x y z} → (x ⊝ y) ≤ z → x ≤ (y + z)
+residual-1 {x} {y} {z} x⊝y≤z .*≤* {ε} y+z∈ε =
   x .closed λ s →
   let ε₁ , ε₂ , ε₁+ε₂≤ε+s , y∋ε₁ , z∋ε₂ = y+z∈ε s in
   x .upper (ℚ⁺.≤-trans (ℚ⁺.≤-reflexive (ℚ⁺.+-comm ε₂ ε₁)) ε₁+ε₂≤ε+s)
            (x⊝y≤z .*≤* z∋ε₂ ε₁ y∋ε₁)
 
-residual-2 : ∀ x y z → x ≤ (y + z) → (x ⊝ y) ≤ z
-residual-2 x y z x≤y+z .*≤* {ε} z∋ε ε' y∋ε' =
+residual-2 : ∀ {x y z} → x ≤ (y + z) → (x ⊝ y) ≤ z
+residual-2 {x} {y} {z} x≤y+z .*≤* {ε} z∋ε ε' y∋ε' =
   x≤y+z .*≤* λ s →
   ε' ,
   ε ,
@@ -915,6 +915,19 @@ _⊖_ : ℝᵘ → ℚ⁺ → ℝᵘ
   x-ε₁ , y-ε₂
   where open qpos.≤-Reasoning
 
+⊖-+-out : ∀ x y ε → ((x + y) ⊖ ε) ≤ ((x ⊖ ε) + y)
+⊖-+-out x y ε = ⊖-iso2 (begin
+    x + y
+  ≤⟨ +-mono-≤ ⊖-eval ≤-refl ⟩
+    ((x ⊖ ε) + rational+ ε) + y
+  ≈⟨ +-assoc (x ⊖ ε) (rational+ ε) y ⟩
+    (x ⊖ ε) + (rational+ ε + y)
+  ≈⟨ +-cong ≃-refl (+-comm (rational+ ε) y) ⟩
+    (x ⊖ ε) + (y + rational+ ε)
+  ≈⟨ ≃-sym (+-assoc (x ⊖ ε) y (rational+ ε)) ⟩
+    ((x ⊖ ε) + y) + rational+ ε
+  ∎)
+  where open ≤-Reasoning
 
 
 -- is this provable some other way? see below: the approximate function
@@ -996,7 +1009,7 @@ sup-approx y .proj₂ = sup-least (λ i → i .proj₂)
 
 sup-0 : sup ⊥ (λ ()) ≃ 0ℝ
 sup-0 .proj₁ .*≤* tt ()
-sup-0 .proj₂ .*≤* = {!!}
+sup-0 .proj₂ = 0-least _
 
 {-
 -- is there a rational between (y ⊖ ε) and y? how could make sure there is? open sets?
@@ -1071,10 +1084,10 @@ approx y .proj₂ .*≤* {ε} y∋ε s =
 
 
 as-inf : ∀ x y → (x ⊝ y) ≃ inf (Σ[ q ∈ ℚ⁺ ] (x ≤ (y + rational+ q))) (λ x → rational+ (x .proj₁))
-as-inf x y .proj₁ = inf-greatest (λ i → residual-2 x y (rational+ (i .proj₁)) (i .proj₂))
+as-inf x y .proj₁ = inf-greatest (λ i → residual-2 (i .proj₂))
 as-inf x y .proj₂ =
   ≤-trans
-    (inf-greatest (λ i → inf-lower ((i .proj₁) , (residual-1 x y (rational+ (i .proj₁)) (i .proj₂)))))
+    (inf-greatest (λ i → inf-lower (i .proj₁ , residual-1 (i .proj₂))))
     (≤-reflexive (≃-sym (approx (x ⊝ y))))
 
 ------------------------------------------------------------------------------
