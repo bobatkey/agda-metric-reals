@@ -22,8 +22,18 @@ record MSpc : Set₁ where
   isEquivalence =
      record { refl  = refl
             ; sym   = ≤-trans sym
-            ; trans = λ x-y y-z → ≤-trans triangle (≤-trans (+-mono-≤ x-y y-z) (≤-reflexive (+-identityʳ 0ℝ)))
+            ; trans = λ {x}{y}{z} x-y y-z →
+                         begin
+                           dist x z
+                         ≤⟨ triangle ⟩
+                           dist x y + dist y z
+                         ≤⟨ +-mono-≤ x-y y-z ⟩
+                           0ℝ + 0ℝ
+                         ≈⟨ +-identityʳ 0ℝ ⟩
+                           0ℝ
+                         ∎
             }
+    where open ≤-Reasoning
 
   open IsEquivalence isEquivalence renaming (refl to ≈-refl; sym to ≈-sym; trans to ≈-trans) public
 
