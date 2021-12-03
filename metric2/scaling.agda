@@ -8,6 +8,7 @@ open import metric2.monoidal
 open import upper-reals
 import qpos as ℚ⁺
 open ℚ⁺ using (ℚ⁺; 1ℚ⁺)
+open metric2.base.category
 
 open MSpc
 open _⇒_
@@ -45,8 +46,6 @@ open _≈f_
   ∎
   where open ≤-Reasoning
 
--- FIXME: discard  : ![ 0 ] X ⇒ ⊤ₘ  -- can't do this yet since using ℚ⁺
-
 map : ∀ {ε X Y} → X ⇒ Y → ![ ε ] X ⇒ ![ ε ] Y
 map f .fun x = f .fun x
 map f .non-expansive = *-mono-≤ ≤-refl (f .non-expansive)
@@ -62,18 +61,34 @@ map-cong {ε}{X}{Y} {f₁}{f₂} f₁≈f₂ .f≈f x =
   ∎
   where open ≤-Reasoning
 
--- FIXME: map-id and map-∘
+
+------------------------------------------------------------------------------
+-- Functoriality properties
+
+map-id : ∀ {ε X} → map {ε}{X} id ≈f id
+map-id {ε}{X} .f≈f x = ![ ε ] X .refl {x}
+
+map-∘ : ∀ {ε X Y Z} {f : Y ⇒ Z} {g : X ⇒ Y} →
+       map {ε} (f ∘ g) ≈f (map f ∘ map g)
+map-∘ {ε}{Z = Z}{f}{g} .f≈f a = ![ ε ] Z .refl {map {ε} f .fun (map {ε} g .fun a)}
 
 weaken : ∀ {ε₁ ε₂ X} → ε₂ ℚ⁺.≤ ε₁ → ![ ε₁ ] X ⇒ ![ ε₂ ] X
 weaken ε₂≤ε₁ .fun x = x
 weaken ε₂≤ε₁ .non-expansive = *-mono-≤ (rational-mono (ℚ⁺.fog-mono ε₂≤ε₁)) ≤-refl
--- FIXME: weaken is natural
+-- FIXME: weaken is natural, and functorial
+
+------------------------------------------------------------------------------
+-- ![_] is a graded exponential comonad with respect to the monoidal
+-- !product, so there are quite a few properties to prove for the
+-- !natural transformations defined below.
+
+-- FIXME: discard  : ![ 0 ] X ⇒ ⊤ₘ  -- can't do this yet since using ℚ⁺
+
 
 derelict : ∀ {X} → ![ 1ℚ⁺ ] X ⇒ X
 derelict .fun x = x
 derelict {X} .non-expansive = ≤-reflexive (≃-sym (*-identityˡ (X .dist _ _)))
 -- FIXME: derelict is natural
-
 
 dig : ∀ {ε₁ ε₂ X} → ![ ε₁ ℚ⁺.* ε₂ ] X ⇒ ![ ε₁ ] (![ ε₂ ] X)
 dig .fun x = x

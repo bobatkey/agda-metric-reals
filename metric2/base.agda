@@ -66,6 +66,9 @@ record _≈f_ {X Y} (f g : X ⇒ Y) : Set where
          }
   where open _⇒_; open _≈f_; open MSpc
 
+≈f-setoid : ∀ {X Y} → Setoid 0ℓ 0ℓ
+≈f-setoid {X}{Y} = record { Carrier = X ⇒ Y ; isEquivalence = ≈f-isEquivalence }
+
 module category where
 
   open MSpc

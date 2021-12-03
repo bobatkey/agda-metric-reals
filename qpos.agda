@@ -228,9 +228,9 @@ q ⊔ r with q ≤? r
 +-increasing : ∀ {q r} → q ≤ q + r
 +-increasing {q}{r} = r≤r (ℚ.p≤p+q {q .rational}{r .rational} (ℚ.positive⇒nonNegative {r .rational} (r .positive)))
 
-private
-  blah : ∀ {q r} → q ℚ.≠ r → q ℚ.≤ r → q ℚ.< r
-  blah q≠r (ℚ.*≤* q≤r) = ℚ.*<* (ℤ.≤∧≢⇒< q≤r (λ x → q≠r (ℚ.*≡* x) ))
+-- private
+--   blah : ∀ {q r} → q ℚ.≠ r → q ℚ.≤ r → q ℚ.< r
+--   blah q≠r (ℚ.*≤* q≤r) = ℚ.*<* (ℤ.≤∧≢⇒< q≤r (λ x → q≠r (ℚ.*≡* x) ))
 
 {-
 postulate -- FIXME
@@ -369,10 +369,8 @@ postulate -- FIXME
 *-1-isAbelianGroup : IsAbelianGroup _≃_ _*_ 1ℚ⁺ 1/_
 *-1-isAbelianGroup = record { isGroup = *-1-isGroup ; comm = *-comm }
 
-*-AbelianGroup : AbelianGroup 0ℓ 0ℓ
-*-AbelianGroup = record
-                   { isAbelianGroup = *-1-isAbelianGroup
-                   }
+*-1-AbelianGroup : AbelianGroup 0ℓ 0ℓ
+*-1-AbelianGroup = record { isAbelianGroup = *-1-isAbelianGroup }
 
 -- FIXME: bundles
 

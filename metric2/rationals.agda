@@ -271,17 +271,26 @@ lemma2 q 0≤q =
     q             ∎
   where open ℚ.≤-Reasoning
 
+open import Relation.Nullary
+
+clamp-value : ℚ → ℚ⁺ → ℚ
+clamp-value q b = (q ℚ.⊔ ℚ.- ℚ⁺.fog b) ℚ.⊓ ℚ⁺.fog b
+
+  -- clamp-tri : ∀ q b → clamp-value q b ℚ.≃
+
+-- FIXME: finish this proof
 clamp : ∀ b → ℚspc ⇒ ℚspc[ b ]
 clamp b .fun q =
-  (q ℚ.⊔ ℚ.- ℚ⁺.fog b) ℚ.⊓ ℚ⁺.fog b ,
-  lemma (((q ℚ.⊔ (ℚ.- (ℚ⁺.fog b))) ℚ.⊓ (ℚ⁺.fog b))) b
+  clamp-value q b ,
+  lemma (clamp-value q b) b
     (ℚ.⊓-glb (ℚ.p≤q⊔p q (ℚ.- ℚ⁺.fog b))
-             (lemma2 (ℚ⁺.fog b) (ℚ⁺.fog-nonneg b)))
+              (lemma2 (ℚ⁺.fog b) (ℚ⁺.fog-nonneg b)))
     (ℚ.p≤q⇒r⊓p≤q (q ℚ.⊔ (ℚ.- (ℚ⁺.fog b))) ℚ.≤-refl)
   where open ℚ.≤-Reasoning
-clamp b .non-expansive {q₁}{q₂} =
-  {!!}
+clamp b .non-expansive {q₁}{q₂} = {!!}
   where open ℚ.≤-Reasoning
+
+
 
 ------------------------------------------------------------------------------
 -- Multiplication
@@ -324,6 +333,9 @@ multiply a b .non-expansive {q₁ , ∣q₁∣≤a}{q₂ , ∣q₂∣≤a} =
 
 mul : ∀ a b → (![ b ] (ℚspc[ a ]) ⊗ ![ a ] (ℚspc[ b ])) ⇒ ℚspc
 mul a b = Λ⁻¹ (multiply a b)
+
+-- FIXME: work out how to state the usual equations for multiplication
+-- with this sensitivity typing.
 
 ------------------------------------------------------------------------------
 -- Reciprocals
@@ -374,9 +386,6 @@ mul a b = Λ⁻¹ (multiply a b)
 
 module _ where
   open import Data.Integer as ℤ
-  open import Data.Nat as ℕ
-  open import Relation.Nullary
-  open import Data.Unit using (tt)
 
   nonzero : ∀ a q → ℚ⁺.fog a ℚ.≤ q → ℤ.∣ ℚ.↥ q ∣ ℚ.≢0
   nonzero a q a≤q = ℚ.p≄0⇒∣↥p∣≢0 q λ q≃0 →
@@ -432,7 +441,7 @@ recip a .non-expansive {q , a≤q} {r , a≤r} =
     rational+ (ℚ⁺.1/ (a ℚ⁺.* a)) * rational ℚ.∣ q ℚ.- r ∣
   ∎
   where open ≤-Reasoning
-        open import Algebra.Properties.AbelianGroup ℚ⁺.*-AbelianGroup
+        open import Algebra.Properties.AbelianGroup ℚ⁺.*-1-AbelianGroup
         r≢0 = nonzero a r a≤r
         q≢0 = nonzero a q a≤q
         r⁺ = ℚ⁺.⟨ r , ℚ.positive (ℚ.<-≤-trans (ℚ.positive⁻¹ (a .ℚ⁺.positive)) a≤r) ⟩

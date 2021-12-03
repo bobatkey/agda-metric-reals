@@ -174,6 +174,9 @@ rational-cong q≃r .proj₂ = rational-mono (ℚ.≤-reflexive (ℚ.≃-sym q�
 rational+ : ℚ⁺ → ℝᵘ
 rational+ q = rational (ℚ⁺.fog q)
 
+rational-mono-reflect : ∀ {q r} → rational q ≤ rational+ r → q ℚ.≤ ℚ⁺.fog r
+rational-mono-reflect {q}{r} q≤r = q≤r .*≤* {r} ℚ.≤-refl
+
 0ℝ : ℝᵘ
 0ℝ .contains q = ⊤
 0ℝ .upper _ tt = tt
@@ -375,7 +378,6 @@ rational⁺-+ q r =
   ∎
   where open ≤-Reasoning
 
--- FIXME: this is also true for rational
 rational+<∞ : ∀ q → rational+ q < ∞
 rational+<∞ q = q , ℚ.≤-refl , (λ x → x)
 
@@ -869,6 +871,18 @@ _⊖_ : ℝᵘ → ℚ⁺ → ℝᵘ
   let ε₁ , ε₂ , ε₁+ε₂≤ε+s , y-ε₁ , q≤ε₂ = h s in
   x .upper ε₁+ε₂≤ε+s (x .upper (qpos.+-mono-≤ qpos.≤-refl (qpos.r≤r q≤ε₂)) (x⊖q≤y .*≤* y-ε₁))
 
+⊖-iso1-0 : ∀ {x q} → (x ⊖ q) ≤ 0ℝ → x ≤ rational+ q
+⊖-iso1-0 {x}{q} x⊖q≤0 =
+  begin
+    x
+  ≤⟨ ⊖-iso1 x⊖q≤0 ⟩
+    0ℝ + rational+ q
+  ≈⟨ +-identityˡ (rational+ q) ⟩
+    rational+ q
+  ∎
+  where open ≤-Reasoning
+
+
 ⊖-iso2 : ∀ {x q y} → x ≤ (y + rational+ q) → (x ⊖ q) ≤ y
 ⊖-iso2 {x}{q}{y} x≤y+q .*≤* {ε} y-ε =
   x≤y+q .*≤* (λ s → ε , q , ℚ⁺.+-increasing , y-ε , ℚ.≤-refl)
@@ -1100,7 +1114,8 @@ sqrt-correct x .proj₁ .*≤* {ε} x∋ε = λ s → {!!}
 sqrt-correct x .proj₂ .*≤* {ε} rx*rx∋ε =
   x .closed λ r →
   let ε₁ , ε₂ , ε₁ε₂≤ε+s , rx∋ε₁ , ry∋ε₂ = rx*rx∋ε r in
-  inf-greatest {S = λ x → rational+ (x .proj₁)} {!!} .*≤* {ε ℚ⁺.+ r} {!!}
+  {!!}
+  -- inf-greatest {S = λ x → rational+ (x .proj₁)} {!!} .*≤* {ε ℚ⁺.+ r} {!!}
 -}
 
 {-

@@ -22,7 +22,9 @@ reg-dist : ∀ {X} → RegFun X → RegFun X → ℝᵘ
 reg-dist {X} x y = sup (ℚ⁺ × ℚ⁺) (λ { (ε₁ , ε₂) → X .dist (x .rfun ε₁) (y .rfun ε₂) ⊖ (ε₁ ℚ⁺.+ ε₂) } )
 
 -- FIXME: some lemmas for dealing with reg-dist, to avoid all the
--- deadling with sup-least and ⊖-iso1/2 below
+-- dealing with sup-least and ⊖-iso1/2 below
+
+
 
 𝒞 : MSpc → MSpc
 𝒞 X .Carrier = RegFun X
@@ -60,6 +62,21 @@ reg-dist {X} x y = sup (ℚ⁺ × ℚ⁺) (λ { (ε₁ , ε₂) → X .dist (x .
   ≈⟨ ≃-sym (+-identityˡ (rational+ (ε₁ ℚ⁺.+ ε₂))) ⟩
     0ℝ + rational+ (ε₁ ℚ⁺.+ ε₂)
   ∎) }
+  where open ≤-Reasoning
+
+------------------------------------------------------------------------------
+≈-𝒞 : ∀ {X} {x y : 𝒞 X .Carrier} →
+       _≈_ (𝒞 X) x y →
+       ∀ ε₁ ε₂ → X .dist (x .rfun ε₁) (y .rfun ε₂) ≤ rational+ (ε₁ ℚ⁺.+ ε₂)
+≈-𝒞 {X}{x}{y} x≃y ε₁ ε₂ =
+  ⊖-iso1-0
+    (begin
+      X .dist (x .rfun ε₁) (y .rfun ε₂) ⊖ (ε₁ ℚ⁺.+ ε₂)
+    ≤⟨ sup-upper (ε₁ , ε₂) ⟩
+      𝒞 X .dist x y
+    ≤⟨ x≃y ⟩
+      0ℝ
+    ∎)
   where open ≤-Reasoning
 
 ------------------------------------------------------------------------------
@@ -230,6 +247,7 @@ unit-join .f≈f x =
 -- This is a monoidal monad, with respect to the monoidal product
 
 open import metric2.monoidal
+open import metric2.terminal
 
 monoidal-⊗ : ∀ {X Y} → (𝒞 X ⊗ 𝒞 Y) ⇒ 𝒞 (X ⊗ Y)
 monoidal-⊗ .fun (x , y) .rfun ε = x .rfun (ε /2) , y .rfun (ε /2)
@@ -339,6 +357,18 @@ monoidal-symmetry {X}{Y} .f≈f (x , y) =
       0ℝ + rational+ (ε₁ ℚ⁺.+ ε₂)
     ∎)
   }
+  where open ≤-Reasoning
+
+monoidal-left-unit : ∀ {X} → (monoidal-⊗ {⊤ₘ}{X} ∘ (unit ⊗f id)) ≈f (map left-unit⁻¹ ∘ left-unit)
+monoidal-left-unit {X} .f≈f (tt , x) =
+  sup-least λ { (ε₁ , ε₂) → ⊖-iso2
+      (begin
+        (0ℝ + X .dist (x .rfun (ε₁ /2)) (x .rfun ε₂))
+      ≤⟨ +-mono-≤ ≤-refl (x .regular (ε₁ /2) ε₂) ⟩
+        (0ℝ + rational+ (ε₁ /2 ℚ⁺.+ ε₂))
+      ≤⟨ +-mono-≤ ≤-refl (rational-mono (ℚ⁺.fog-mono (ℚ⁺.+-mono-≤ (ℚ⁺.half-≤ ε₁) (ℚ⁺.≤-refl {ε₂})))) ⟩
+        (0ℝ + rational+ (ε₁ ℚ⁺.+ ε₂))
+      ∎) }
   where open ≤-Reasoning
 
 monoidal-unit : ∀ {X Y} → (monoidal-⊗ {X} {Y} ∘ (unit ⊗f unit)) ≈f unit

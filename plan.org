@@ -1,0 +1,78 @@
+#+STARTUP: indent
+
+* Plan [0/2]
+- [ ] Rearrange files into a stdlib-like hierarchy
+  - [ ] qpos -> Data.Rational.Positive ???
+  - [ ] CommutativeSemigroupSolver -> Algebra.
+  - [ ] upper-reals -> Data.Real.Upper
+- [ ] Use Function.Metric.Rational
+- [ ]
+
+
+* Related work
+- https://github.com/andrejbauer/clerical/
+- Floating-point arithmetic in the Coq system, Guillaume Melquiond
+- A Sheaf Theoretic Approach to Measure Theory, Matthew Jackson
+  (PhD thesis). Uses the upper semicontinuous reals.
+- https://link.springer.com/book/10.1007/BFb0080643 -- Principles
+  of Intuitionism
+- https://ncatlab.org/nlab/show/one-sided+real+number -- page about
+  semicontinuous reals, listing some of the results
+- https://blogs.ed.ac.uk/he-lab/2021/03/18/todd-ambridge-global-optimisation-via-constructive-real-numbers/
+- https://github.com/MrChico/Reals-in-agda
+
+** A Universal Characterization of the Closed Euclidean Interval
+https://www.cs.bham.ac.uk/~mhe/papers/lics2001-revised.pdf
+
+- Martín H. Escardó, Alex K. Simpson
+- We propose a notion of interval object in a category with finite
+  products, providing a universal property for closed and bounded real
+  line segments. The universal property gives rise to an analogue of
+  primitive recursion for defining computable functions on the
+  interval. We use this to define basic arithmetic operations and to
+  verify equations between them. We test the notion in categories of
+  interest. In the category of sets, any closed and bounded interval
+  of real numbers is an interval object. In the category of topo
+  logical spaces, the interval objects are closed and bounded
+  intervals with the Euclidean topology. We also prove that an
+  interval object exists in any elementary topos with natural numbers
+  object.
+
+* Sub-projects
+
+** Quantitative Algebraic Theories
+
+*** Iteration Theories
+https://personal.cis.strath.ac.uk/r.mardare/papers/IterationTh.pdf
+
+** Constructive partiality combined with non-determinism and probability
+
+Objective: to make a partial probability monad that works
+constructively. This is so we can model languages with recursion
+(so partiality) and probabilistic behaviour, such as
+
+Plan: to combine the "free omegaCPO" monad (defined using
+inductive-inductive definitions) with the probability monad
+generated from the quantitaive algebraic theory. This will live in
+the category of metric spaces and non-expansive maps.
+
+Related work:
+- *Combining Nondeterminism, Probability, and Termination:
+  Equational and Metric Reasoning* by Matteo Mio, Ralph Sarkis,
+  Valeria Vignudelli. https://arxiv.org/pdf/2012.00382.pdf
+
+  This carries out the above programme in a classical setting, so
+  the partiality is modelled simply by `_+1`. Includes the correct
+  categorical definitions though.
+
+** Searching spaces for global maxima/minima
+
+Objective: searching for global maxima/minima for functions
+
+Plan: to reuse the integration monad of O'Connor and Spitters to
+allowing systematic searching for global minima and maxima, which
+will allow for optmisation problems to be solved exactly (up to
+some level of approximation).
+
+Related work:
+- LICS'21 paper by Todd Ambridge Waugh and Dan Ghica.
