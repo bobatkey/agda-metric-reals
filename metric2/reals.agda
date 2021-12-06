@@ -5,7 +5,7 @@ module metric2.reals where
 open import Level using (0ℓ)
 open import metric2.base
 open metric2.base.category
-open import metric2.completion renaming (map to 𝒞-map; unit to 𝒞-unit; map-cong to 𝒞-map-cong)
+open import metric2.completion renaming (map to 𝒞-map; unit to 𝒞-unit; map-cong to 𝒞-map-cong; map-∘ to 𝒞-map-∘; map-id to 𝒞-map-id)
 open import metric2.rationals
 open import metric2.monoidal
 open import metric2.terminal
@@ -94,7 +94,7 @@ addℝ-comm =
     𝒞-map add ∘ (𝒞-map ⊗-symmetry ∘ monoidal-⊗)
   ≈⟨ assoc (𝒞-map add) (𝒞-map ⊗-symmetry) monoidal-⊗  ⟩
     (𝒞-map add ∘ 𝒞-map ⊗-symmetry) ∘ monoidal-⊗
-  ≈˘⟨ ∘-cong map-∘ (≈f-isEquivalence .IsEquivalence.refl) ⟩
+  ≈˘⟨ ∘-cong 𝒞-map-∘ (≈f-isEquivalence .IsEquivalence.refl) ⟩
     𝒞-map (add ∘ ⊗-symmetry) ∘ monoidal-⊗
   ≈⟨ ∘-cong (𝒞-map-cong add-comm) (≈f-isEquivalence .IsEquivalence.refl) ⟩
     𝒞-map add ∘ monoidal-⊗
@@ -112,7 +112,7 @@ addℝ-assoc =
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map add ∘ monoidal-⊗) ⊗f id) ∘ ⊗-assoc
   ≈˘⟨ ∘-cong refl (∘-cong (⊗f-cong refl (identityˡ id)) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map add ∘ monoidal-⊗) ⊗f (id ∘ id)) ∘ ⊗-assoc
-  ≈˘⟨ ∘-cong refl (∘-cong (⊗f-cong refl (∘-cong map-id refl)) refl) ⟩
+  ≈˘⟨ ∘-cong refl (∘-cong (⊗f-cong refl (∘-cong 𝒞-map-id refl)) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map add ∘ monoidal-⊗) ⊗f (𝒞-map id ∘ id)) ∘ ⊗-assoc
   ≈⟨ ∘-cong refl (∘-cong (⊗f-∘ (𝒞-map add) monoidal-⊗ (𝒞-map id) id) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map add ⊗f 𝒞-map id) ∘ (monoidal-⊗ ⊗f id)) ∘ ⊗-assoc
@@ -130,19 +130,19 @@ addℝ-assoc =
     ((𝒞-map add ∘ 𝒞-map (add ⊗f id)) ∘ monoidal-⊗ ∘ (monoidal-⊗ ⊗f id)) ∘ ⊗-assoc
   ≈⟨ sym (assoc _ _ _) ⟩
     (𝒞-map add ∘ 𝒞-map (add ⊗f id)) ∘ (monoidal-⊗ ∘ (monoidal-⊗ ⊗f id)) ∘ ⊗-assoc
-  ≈⟨ ∘-cong (sym map-∘) (sym (assoc _ _ _)) ⟩
+  ≈⟨ ∘-cong (sym 𝒞-map-∘) (sym (assoc _ _ _)) ⟩
     𝒞-map (add ∘ (add ⊗f id)) ∘ (monoidal-⊗ ∘ (monoidal-⊗ ⊗f id) ∘ ⊗-assoc)
   ≈⟨ ∘-cong refl monoidal-assoc ⟩
     𝒞-map (add ∘ (add ⊗f id)) ∘ 𝒞-map ⊗-assoc ∘ monoidal-⊗ ∘ (id ⊗f monoidal-⊗)
   ≈⟨ assoc _ _ _ ⟩
     (𝒞-map (add ∘ (add ⊗f id)) ∘ 𝒞-map ⊗-assoc) ∘ monoidal-⊗ ∘ (id ⊗f monoidal-⊗)
-  ≈⟨ ∘-cong (sym map-∘) refl ⟩
+  ≈⟨ ∘-cong (sym 𝒞-map-∘) refl ⟩
     𝒞-map ((add ∘ (add ⊗f id)) ∘ ⊗-assoc) ∘ monoidal-⊗ ∘ (id ⊗f monoidal-⊗)
   ≈⟨ ∘-cong (𝒞-map-cong (sym (assoc _ _ _))) refl ⟩
     𝒞-map (add ∘ (add ⊗f id) ∘ ⊗-assoc) ∘ monoidal-⊗ ∘ (id ⊗f monoidal-⊗)
   ≈⟨ ∘-cong (𝒞-map-cong add-assoc) refl ⟩
     𝒞-map (add ∘ (id ⊗f add)) ∘ monoidal-⊗ ∘ (id ⊗f monoidal-⊗)
-  ≈⟨ ∘-cong map-∘ refl ⟩
+  ≈⟨ ∘-cong 𝒞-map-∘ refl ⟩
     (𝒞-map add ∘ 𝒞-map (id ⊗f add)) ∘ monoidal-⊗ ∘ (id ⊗f monoidal-⊗)
   ≈⟨ assoc _ _ _ ⟩
     ((𝒞-map add ∘ 𝒞-map (id ⊗f add)) ∘ monoidal-⊗) ∘ (id ⊗f monoidal-⊗)
@@ -156,7 +156,7 @@ addℝ-assoc =
     (𝒞-map add ∘ monoidal-⊗) ∘ (𝒞-map id ⊗f 𝒞-map add) ∘ (id ⊗f monoidal-⊗)
   ≈⟨ ∘-cong refl (sym (⊗f-∘ (𝒞-map id) id (𝒞-map add) monoidal-⊗)) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map id ∘ id) ⊗f (𝒞-map add ∘ monoidal-⊗))
-  ≈⟨ ∘-cong refl (⊗f-cong (∘-cong map-id refl) refl) ⟩
+  ≈⟨ ∘-cong refl (⊗f-cong (∘-cong 𝒞-map-id refl) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((id ∘ id) ⊗f (𝒞-map add ∘ monoidal-⊗))
   ≈⟨ ∘-cong refl (⊗f-cong (identityˡ id) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ (id ⊗f (𝒞-map add ∘ monoidal-⊗))
@@ -181,7 +181,7 @@ addℝ-identityˡ =
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map zero ∘ 𝒞-unit) ⊗f id) ∘ left-unit⁻¹
   ≈˘⟨ ∘-cong refl (∘-cong (⊗f-cong refl (identityˡ id)) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map zero ∘ 𝒞-unit) ⊗f (id ∘ id)) ∘ left-unit⁻¹
-  ≈˘⟨ ∘-cong refl (∘-cong (⊗f-cong refl (∘-cong map-id refl)) refl) ⟩
+  ≈˘⟨ ∘-cong refl (∘-cong (⊗f-cong refl (∘-cong 𝒞-map-id refl)) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map zero ∘ 𝒞-unit) ⊗f (𝒞-map id ∘ id)) ∘ left-unit⁻¹
   ≈⟨ ∘-cong refl (∘-cong (⊗f-∘ (𝒞-map zero) 𝒞-unit (𝒞-map id) id) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ ((𝒞-map zero ⊗f 𝒞-map id) ∘ (𝒞-unit ⊗f id)) ∘ left-unit⁻¹
@@ -195,7 +195,7 @@ addℝ-identityˡ =
     ((𝒞-map add ∘ 𝒞-map (zero ⊗f id) ∘ monoidal-⊗) ∘ (𝒞-unit ⊗f id)) ∘ left-unit⁻¹
   ≈⟨ ∘-cong (∘-cong (assoc (𝒞-map add) (𝒞-map (zero ⊗f id)) monoidal-⊗) refl) refl ⟩
     (((𝒞-map add ∘ 𝒞-map (zero ⊗f id)) ∘ monoidal-⊗) ∘ (𝒞-unit ⊗f id)) ∘ left-unit⁻¹
-  ≈˘⟨ ∘-cong (∘-cong (∘-cong map-∘ refl) refl) refl ⟩
+  ≈˘⟨ ∘-cong (∘-cong (∘-cong 𝒞-map-∘ refl) refl) refl ⟩
     ((𝒞-map (add ∘ (zero ⊗f id)) ∘ monoidal-⊗) ∘ (𝒞-unit ⊗f id)) ∘ left-unit⁻¹
   ≈˘⟨ ∘-cong (assoc (𝒞-map (add ∘ (zero ⊗f id))) monoidal-⊗ (𝒞-unit ⊗f id)) refl ⟩
     (𝒞-map (add ∘ (zero ⊗f id)) ∘ monoidal-⊗ ∘ (𝒞-unit ⊗f id)) ∘ left-unit⁻¹
@@ -203,7 +203,7 @@ addℝ-identityˡ =
     (𝒞-map (add ∘ (zero ⊗f id)) ∘ 𝒞-map left-unit⁻¹ ∘ left-unit) ∘ left-unit⁻¹
   ≈⟨ ∘-cong (assoc (𝒞-map (add ∘ (zero ⊗f id))) (𝒞-map left-unit⁻¹) left-unit) refl ⟩
     ((𝒞-map (add ∘ (zero ⊗f id)) ∘ 𝒞-map left-unit⁻¹) ∘ left-unit) ∘ left-unit⁻¹
-  ≈˘⟨ ∘-cong (∘-cong map-∘ refl) refl ⟩
+  ≈˘⟨ ∘-cong (∘-cong 𝒞-map-∘ refl) refl ⟩
     (𝒞-map ((add ∘ (zero ⊗f id)) ∘ left-unit⁻¹) ∘ left-unit) ∘ left-unit⁻¹
   ≈˘⟨ assoc (𝒞-map ((add ∘ (zero ⊗f id)) ∘ left-unit⁻¹)) left-unit left-unit⁻¹ ⟩
     𝒞-map ((add ∘ (zero ⊗f id)) ∘ left-unit⁻¹) ∘ left-unit ∘ left-unit⁻¹
@@ -211,7 +211,7 @@ addℝ-identityˡ =
     𝒞-map (add ∘ (zero ⊗f id) ∘ left-unit⁻¹) ∘ id
   ≈⟨ ∘-cong (𝒞-map-cong add-identityˡ) refl ⟩
     𝒞-map id ∘ id
-  ≈⟨ ∘-cong map-id refl ⟩
+  ≈⟨ ∘-cong 𝒞-map-id refl ⟩
     id ∘ id
   ≈⟨ identityˡ id ⟩
     id
@@ -229,7 +229,7 @@ addℝ-inverse =
     addℝ ∘ (id ⊗f negateℝ) ∘ (derelict ⊗f derelict) ∘ duplicate
   ≡⟨⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ (id ⊗f 𝒞-map negate) ∘ (derelict ⊗f derelict) ∘ duplicate
-  ≈⟨ ∘-cong refl (∘-cong (⊗f-cong (sym map-id) refl) refl) ⟩
+  ≈⟨ ∘-cong refl (∘-cong (⊗f-cong (sym 𝒞-map-id) refl) refl) ⟩
     (𝒞-map add ∘ monoidal-⊗) ∘ (𝒞-map id ⊗f 𝒞-map negate) ∘ (derelict ⊗f derelict) ∘ duplicate
   ≈⟨ assoc _ _ _ ⟩
     ((𝒞-map add ∘ monoidal-⊗) ∘ (𝒞-map id ⊗f 𝒞-map negate)) ∘ (derelict ⊗f derelict) ∘ duplicate
