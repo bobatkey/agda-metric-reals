@@ -253,6 +253,9 @@ addℝ-inverse =
 
 -- FIXME: rename these to remove the ℝ suffixes
 
+ℚ→ℝ : ℚ → ℝ
+ℚ→ℝ q = 𝒞-unit ._⇒_.fun q
+
 _+ℝ_ : ℝ → ℝ → ℝ
 x +ℝ y = addℝ ._⇒_.fun (x , y)
 
@@ -447,7 +450,7 @@ scale q = 𝒞-map (ℚ-scale q) ∘ distr q
 
 -- Fully "metrised" versions of multiplication and reciprocal
 
-mulℝ : ∀ a b → (![ b ] ℝspc[ a ] ⊗ ![ a ] ℝspc[ b ]) ⇒ ℝspc
+mulℝ : ∀ a b → (![ b ] ℝspc[ a ] ⊗ ![ a ] ℝspc[ b ]) ⇒ ℝspc[ a ℚ⁺.* b ]
 mulℝ a b = 𝒞-map (mul a b) ∘ monoidal-⊗ ∘ (distr b ⊗f distr a)
 
 reciprocalℝ : ∀ a → ![ ℚ⁺.1/ (a ℚ⁺.* a) ] ℝspc[ a ⟩ ⇒ ℝspc
@@ -503,11 +506,26 @@ bound-eq x =
   ∎
   where open ℝᵘ.≤-Reasoning
 
-mult : ℝ → ℝ → ℝ
-mult x y =
+_*ℝ_ : ℝ → ℝ → ℝ
+_*ℝ_ x y =
   let a , x' = bound x in
   let b , y' = bound y in
-  mulℝ a b .fun (x' , y')
+  ℝ-forget (mulℝ a b .fun (x' , y'))
+
+2ℝ : ℝ
+2ℝ = ℚ→ℝ (ℚ.1ℚᵘ ℚ.+ ℚ.1ℚᵘ)
+
+4ℝ : ℝ
+4ℝ = 2ℝ *ℝ 2ℝ
+
+4ℚ : ℚ
+4ℚ = ℚ.1ℚᵘ ℚ.+ ℚ.1ℚᵘ ℚ.+ ℚ.1ℚᵘ ℚ.+ ℚ.1ℚᵘ
+
+module _ where
+  open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+  _ :  4ℝ .RegFun.rfun ℚ⁺.½ ≡ 4ℚ
+  _ = refl
 
 ------------------------------------------------------------------------
 -- TODO: reciprocal
@@ -528,4 +546,4 @@ mult x y =
 -- define x(ε) = sum(modulus(ε), a)
 --   then prove that this is a regular function
 
--- and then prove that it gives us
+-- and then prove that it gives us the infinite sum??

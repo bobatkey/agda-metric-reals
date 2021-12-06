@@ -295,8 +295,22 @@ clamp b .non-expansive {q₁}{q₂} = {!!}
 ------------------------------------------------------------------------------
 -- Multiplication
 
-multiply : ∀ a b → ![ b ] (ℚspc[ a ]) ⇒ (![ a ] (ℚspc[ b ]) ⊸ ℚspc)
-multiply a b .fun (q , ∣q∣≤a) .fun (r , ∣r∣≤b) = q ℚ.* r
+multiply : ∀ a b → ![ b ] (ℚspc[ a ]) ⇒ (![ a ] (ℚspc[ b ]) ⊸ ℚspc[ a ℚ⁺.* b ])
+multiply a b .fun (q , ∣q∣≤a) .fun (r , ∣r∣≤b) = q ℚ.* r , q*r-bounded
+  where open ℚ.≤-Reasoning
+        q*r-bounded : ℚ.∣ q ℚ.* r ∣ ℚ.≤ ℚ⁺.fog (a ℚ⁺.* b)
+        q*r-bounded =
+          begin
+            ℚ.∣ q ℚ.* r ∣
+          ≡⟨ ℚ.∣p*q∣≡∣p∣*∣q∣ q r ⟩
+            ℚ.∣ q ∣ ℚ.* ℚ.∣ r ∣
+          ≤⟨ ℚ.*-monoʳ-≤-nonNeg {ℚ.∣ q ∣} (ℚ.∣-∣-nonNeg q) ∣r∣≤b ⟩
+            ℚ.∣ q ∣ ℚ.* ℚ⁺.fog b
+          ≤⟨ ℚ.*-monoˡ-≤-nonNeg (ℚ.nonNegative (ℚ⁺.fog-nonneg b)) ∣q∣≤a ⟩
+            ℚ⁺.fog a ℚ.* ℚ⁺.fog b
+          ≈⟨ ℚ.≃-sym (ℚ⁺.*-fog a b) ⟩
+            ℚ⁺.fog (a ℚ⁺.* b)
+          ∎
 multiply a b .fun (q , ∣q∣≤a) .non-expansive {r₁ , ∣r₁∣≤b} {r₂ , ∣r₂∣≤b} =
   begin
     rational ℚ.∣ q ℚ.* r₁ ℚ.- q ℚ.* r₂ ∣
@@ -331,7 +345,7 @@ multiply a b .non-expansive {q₁ , ∣q₁∣≤a}{q₂ , ∣q₂∣≤a} =
   ∎ }
   where open ≤-Reasoning
 
-mul : ∀ a b → (![ b ] (ℚspc[ a ]) ⊗ ![ a ] (ℚspc[ b ])) ⇒ ℚspc
+mul : ∀ a b → (![ b ] (ℚspc[ a ]) ⊗ ![ a ] (ℚspc[ b ])) ⇒ ℚspc[ a ℚ⁺.* b ]
 mul a b = Λ⁻¹ (multiply a b)
 
 -- FIXME: work out how to state the usual equations for multiplication
