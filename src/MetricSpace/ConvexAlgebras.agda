@@ -1,15 +1,15 @@
-module metric2.convex-alg where
+module MetricSpace.ConvexAlgebras where
 
 open import Data.Product using (_,_; Σ-syntax; proj₁; proj₂; _×_)
 open import Data.Unit using (tt)
+import Data.Real.UpperClosed as ℝᵘ
 import Data.Integer as ℤ
 import Data.Nat as ℕ
 open import Data.Rational.Unnormalised as ℚ using () renaming (ℚᵘ to ℚ; 0ℚᵘ to 0ℚ; 1ℚᵘ to 1ℚ)
 import Data.Rational.Unnormalised.Properties as ℚ
-open import metric2.base
+open import MetricSpace
 
-import upper-reals
-open import qpos as ℚ⁺ using (ℚ⁺; 1ℚ⁺)
+open import Data.Rational.Unnormalised.Positive as ℚ⁺ using (ℚ⁺; 1ℚ⁺)
 
 open MSpc
 
@@ -90,7 +90,7 @@ module _ (X : MSpc) where
     tm-sym   : ∀ {s t ε} → within s ε t → within t ε s
     tm-trans : ∀ {s t u ε₁ ε₂} → within s ε₁ t → within t ε₂ u → within s (ε₁ ℚ⁺.+ ε₂) u
     tm-arch  : ∀ {s t ε} → (∀ δ → within s (ε ℚ⁺.+ δ) t) → within s ε t
-    tm-var   : ∀ {x y ε} → X .dist x y upper-reals.≤ upper-reals.rational+ ε → within (η x) ε (η y)
+    tm-var   : ∀ {x y ε} → X .dist x y ℝᵘ.≤ ℝᵘ.rational+ ε → within (η x) ε (η y)
     tm-idem  : ∀ {t q ε} → within (split t q t) ε t
     tm-assoc : ∀ {s t u q₁ q₂ q₁' q₂' ε} →
                  q₁' ≃ (q₁ * q₂) →
@@ -107,7 +107,7 @@ module _ (X : MSpc) where
     -- FIXME: also add tm-comm ??? and tm-zero
     -- is the only difference between probability distributions and step functions commutativity?
 
-  open upper-reals
+  open ℝᵘ
 
   -- a metric space!
   𝕋 : MSpc
@@ -130,7 +130,7 @@ module _ (X : MSpc) where
 
 open _⇒_
 
-open upper-reals
+open ℝᵘ
 
 -- Messy!
 unit : ∀ {X} → X ⇒ 𝕋 X
@@ -154,7 +154,7 @@ join .non-expansive = {!!}
 -- FIXME: completion distributes over 𝕋
 
 open import Data.Nat using (ℕ; zero; suc)
-open import metric2.rationals
+open import MetricSpace.Rationals
 
 step-identity : ℕ → ℚ → ℚ → term ℚspc
 step-identity ℕ.zero q a = η q
