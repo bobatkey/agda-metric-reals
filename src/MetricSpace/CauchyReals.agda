@@ -4,7 +4,7 @@ module MetricSpace.CauchyReals where
 
 open import Level using (0ℓ)
 open import MetricSpace
-open MetricSpace.category
+open import MetricSpace.Category
 open import MetricSpace.Completion renaming (map to 𝒞-map; unit to 𝒞-unit; map-cong to 𝒞-map-cong; map-∘ to 𝒞-map-∘; map-id to 𝒞-map-id)
 open import MetricSpace.Rationals
 open import MetricSpace.MonoidalProduct

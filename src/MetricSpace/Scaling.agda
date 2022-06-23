@@ -4,11 +4,10 @@ module MetricSpace.Scaling where
 
 open import Data.Product using (_,_)
 open import MetricSpace
+open import MetricSpace.Category
 open import MetricSpace.MonoidalProduct
 open import Data.Real.UpperClosed
-import Data.Rational.Unnormalised.Positive as ℚ⁺
-open ℚ⁺ using (ℚ⁺; 1ℚ⁺)
-open MetricSpace.category
+open import Data.Rational.Unnormalised.Positive as ℚ⁺ using (ℚ⁺; 1ℚ⁺)
 
 open MSpc
 open _⇒_

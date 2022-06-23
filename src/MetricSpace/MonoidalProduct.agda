@@ -5,7 +5,9 @@ module MetricSpace.MonoidalProduct where
 open import Data.Product using (_×_; _,_)
 open import Data.Unit using (tt)
 open import MetricSpace
+open import MetricSpace.Category
 open import MetricSpace.Terminal
+open import MetricSpace.CartesianProduct
 open import Data.Real.UpperClosed
 
 open MSpc
@@ -79,8 +81,6 @@ _⊗f_ : ∀ {X X' Y Y'} → X ⇒ X' → Y ⇒ Y' → (X ⊗ Y) ⇒ (X' ⊗ Y')
 
 -- FIXME: ⊗f preserves composition and identities
 
-open category
-
 ⊗f-∘ : ∀ {X₁ X₂ X₃ Y₁ Y₂ Y₃} →
        (f  : X₂ ⇒ X₃) → (g  : X₁ ⇒ X₂) →
        (f' : Y₂ ⇒ Y₃) → (g' : Y₁ ⇒ Y₂) →
@@ -91,7 +91,6 @@ open category
 ------------------------------------------------------------------------------
 -- From this product to the cartesian one. This could be derived from
 -- relationships between the norms used to define them.
-open import MetricSpace.CartesianProduct
 
 ⊗⇒× : ∀ {X Y} → (X ⊗ Y) ⇒ (X ×ₘ Y)
 ⊗⇒× .fun xy = xy
@@ -131,8 +130,6 @@ left-unit⁻¹ .fun x = (tt , x)
 left-unit⁻¹ .non-expansive = ≤-reflexive (+-identityˡ _)
 
 module _ where
-
-  open category
 
   left-unit-iso₁ : ∀ {X} → (left-unit ∘ left-unit⁻¹) ≈f (id {X})
   left-unit-iso₁ {X} .f≈f a = X .≈-refl
