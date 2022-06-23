@@ -276,7 +276,7 @@ x -ℝ y = x +ℝ (-ℝ y)
   _⇒_.cong addℝ {x₁ , y₁} {x₂ , y₂}
                  (≈-⊗ {ℝspc}{ℝspc} {x₁}{x₂}{y₁}{y₂} x₁≃x₂ y₁≃y₂)
 
--ℝ-cong : ∀ {x₁ x₂} → x₁ ≃ x₂ → (-ℝ x₁) ≃ (-ℝ x₂)
+-ℝ-cong : Congruent₁ _≃_ (-ℝ_)
 -ℝ-cong {x₁}{x₂} x₁≃x₂ =
   _⇒_.cong negateℝ {x₁} {x₂} x₁≃x₂
 
@@ -406,11 +406,8 @@ module _ where
 _≤ℝ_ : ℝ → ℝ → Set
 x ≤ℝ y = 0≤ℝ (y -ℝ x)
 
-{-
 ≤ℝ-refl : ∀ x → x ≤ℝ x
 ≤ℝ-refl x ε = {!!}
--}
-
 
 0<ℝ : ℝ → Set
 0<ℝ x = Σ[ ε ∈ ℚ⁺ ] (𝒞-unit ._⇒_.fun (ℚ⁺.fog ε) ≤ℝ x )
@@ -487,20 +484,21 @@ get-bound r =
   where open ℚ.≤-Reasoning
 
 bound : ℝ → Σ[ q ∈ ℚ⁺ ] ℝ[ q ]
-bound r = get-bound r , 𝒞-map (clamp (get-bound r)) ._⇒_.fun r
+bound r .proj₁ = get-bound r
+bound r .proj₂ = 𝒞-map (clamping.clamp (get-bound r)) ._⇒_.fun r
 
 open _⇒_
 
-ℝ-forget : ∀ {q} → ℝ[ q ] → ℝ
-ℝ-forget {q} = 𝒞-map (forget q) .fun
+ℝ-unbound : ∀ {q} → ℝ[ q ] → ℝ
+ℝ-unbound {q} = 𝒞-map (unbound q) .fun
 
-bound-eq : ∀ x → ℝ-forget (bound x .proj₂) ≃ x
+bound-eq : ∀ x → ℝ-unbound (bound x .proj₂) ≃ x
 bound-eq x =
-  𝒞-≈ {x = ℝ-forget (bound x .proj₂)} {y = x} λ ε₁ ε₂ →
+  𝒞-≈ {x = ℝ-unbound (bound x .proj₂)} {y = x} λ ε₁ ε₂ →
   begin
-     ℝᵘ.rational ℚ.∣ ℝ-forget (bound x .proj₂) .RegFun.rfun ε₁ ℚ.- x .RegFun.rfun ε₂ ∣
+     ℝᵘ.rational ℚ.∣ ℝ-unbound (bound x .proj₂) .RegFun.rfun ε₁ ℚ.- x .RegFun.rfun ε₂ ∣
   ≡⟨⟩
-     ℝᵘ.rational ℚ.∣ clamp-value (x .RegFun.rfun ε₁) (get-bound x) ℚ.- x .RegFun.rfun ε₂ ∣
+     ℝᵘ.rational ℚ.∣ clamping.clamp-v (get-bound x) (x .RegFun.rfun ε₁) ℚ.- x .RegFun.rfun ε₂ ∣
   ≤⟨ {!!} ⟩
      ℝᵘ.rational+ (ε₁ ℚ⁺.+ ε₂)
   ∎
@@ -510,7 +508,14 @@ _*ℝ_ : ℝ → ℝ → ℝ
 _*ℝ_ x y =
   let a , x' = bound x in
   let b , y' = bound y in
-  ℝ-forget (mulℝ a b .fun (x' , y'))
+  ℝ-unbound (mulℝ a b .fun (x' , y'))
+
+-- TODO:
+-- 1. congruence
+-- 2. associativity (needs proofs from rationals)
+-- 3. distributivity
+-- 4. identities
+-- 5. zeros
 
 2ℝ : ℝ
 2ℝ = ℚ→ℝ (ℚ.1ℚᵘ ℚ.+ ℚ.1ℚᵘ)

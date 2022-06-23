@@ -16,7 +16,8 @@ open _≈f_
 
 -- A graded comonad, for expressing sensitivity wrt inputs
 
--- FIXME: ought to be ℚ≥0, or even ℝᵘ (but that isn't a set!)
+-- FIXME: ought to be ℚ≥0, or even ℝᵘ (but that isn't a set! is that a
+-- problem?)
 ![_] : ℚ⁺ → MSpc → MSpc
 ![ ε ] X .Carrier = X .Carrier
 ![ ε ] X .dist x y = rational+ ε * X .dist x y

@@ -1,3 +1,5 @@
+{-# OPTIONS --safe --without-K #-}
+
 module metric2.product where
 
 open import Data.Product using (_,_; _×_)

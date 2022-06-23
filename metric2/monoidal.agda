@@ -12,6 +12,9 @@ open MSpc
 open _⇒_
 open _≈f_
 
+-- FIXME: parameterise this by the norm being used. Construction of
+-- the monoidal structure ought to be generic.
+
 _⊗_ : MSpc → MSpc → MSpc
 (X ⊗ Y) .Carrier =
   X .Carrier × Y .Carrier
@@ -84,6 +87,17 @@ open category
        ((f ∘ g) ⊗f (f' ∘ g')) ≈f ((f ⊗f f') ∘ (g ⊗f g'))
 ⊗f-∘ {X₃ = X₃}{Y₃ = Y₃} f g f' g' .f≈f (x₁ , y₁) =
   (X₃ ⊗ Y₃) .≈-refl
+
+------------------------------------------------------------------------------
+-- From this product to the cartesian one. This could be derived from
+-- relationships between the norms used to define them.
+open import metric2.product
+
+⊗⇒× : ∀ {X Y} → (X ⊗ Y) ⇒ (X ×ₘ Y)
+⊗⇒× .fun xy = xy
+⊗⇒× .non-expansive = ⊔-least (+-increasingʳ _ _) (+-increasingˡ _ _)
+
+-- FIXME: this is natural, and preserves assoc, units, etc.
 
 ------------------------------------------------------------------------------
 -- Associativity

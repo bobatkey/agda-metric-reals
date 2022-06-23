@@ -1,0 +1,3 @@
+name: adga-metric-reals
+include: .
+depend: standard-library

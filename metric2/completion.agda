@@ -19,10 +19,14 @@ record RegFun (X : MSpc) : Set where
 open RegFun
 
 reg-dist : ∀ {X} → RegFun X → RegFun X → ℝᵘ
-reg-dist {X} x y = sup (ℚ⁺ × ℚ⁺) (λ { (ε₁ , ε₂) → X .dist (x .rfun ε₁) (y .rfun ε₂) ⊖ (ε₁ ℚ⁺.+ ε₂) } )
+reg-dist {X} x y =
+  sup (ℚ⁺ × ℚ⁺) (λ { (ε₁ , ε₂) → X .dist (x .rfun ε₁) (y .rfun ε₂) ⊖ (ε₁ ℚ⁺.+ ε₂) } )
+
+
 
 -- FIXME: some lemmas for dealing with reg-dist, to avoid all the
 -- dealing with sup-least and ⊖-iso1/2 below
+
 
 
 
@@ -50,6 +54,8 @@ reg-dist {X} x y = sup (ℚ⁺ × ℚ⁺) (λ { (ε₁ , ε₂) → X .dist (x .
                    ∎
               }
    where open ≤-Reasoning
+
+-- 𝒞 X .dist x y ≤ X .dist (x .rfun ε) (y .rfun ϵ)
 
 𝒞-≈ : ∀ {X} {x y : 𝒞 X .Carrier} →
        (∀ ε₁ ε₂ → X .dist (x .rfun ε₁) (y .rfun ε₂) ≤ rational+ (ε₁ ℚ⁺.+ ε₂)) →
@@ -245,6 +251,8 @@ unit-join .f≈f x =
 
 ------------------------------------------------------------------------------
 -- This is a monoidal monad, with respect to the monoidal product
+
+-- FIXME: is this true for any norm-product?
 
 open import metric2.monoidal
 open import metric2.terminal

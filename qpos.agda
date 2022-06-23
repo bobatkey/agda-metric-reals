@@ -2,7 +2,13 @@
 
 module qpos where
 
-open import Algebra
+open import Algebra using (Commutative; Associative;
+                           Congruent₂; Congruent₁;
+                           LeftIdentity; RightIdentity; Identity;
+                           _DistributesOverʳ_; _DistributesOverˡ_;
+                           LeftInverse; RightInverse; Inverse;
+                           IsMagma; IsSemigroup; IsCommutativeSemigroup; CommutativeSemigroup;
+                           IsMonoid; IsCommutativeMonoid; IsGroup; IsAbelianGroup; AbelianGroup)
 open import Level using (0ℓ)
 open import Data.Product using (Σ-syntax; _,_)
 open import Data.Nat as ℕ using (ℕ; zero; suc)
@@ -13,8 +19,8 @@ open import Data.Integer as ℤ using (ℤ; +_)
 import Data.Integer.Properties as ℤ
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Unit using (⊤; tt)
-open import Relation.Binary
-open import Relation.Binary.PropositionalEquality -- using (refl)
+open import Relation.Binary using (Rel; Reflexive; Symmetric; Transitive; IsEquivalence; Setoid; IsPreorder; _Respectsʳ_; _Respectsˡ_; _Respects₂_; _⇒_; Trans; _Preserves₂_⟶_⟶_)
+open import Relation.Binary.PropositionalEquality using (module ≡-Reasoning; sym; refl)
 open import Relation.Nullary using (yes; no; ¬_)
 
 record ℚ⁺ : Set where
@@ -25,7 +31,7 @@ record ℚ⁺ : Set where
 open ℚ⁺
 
 infix  4 _≃_ -- _≠_
-infix 4 _≤_ _≰_ -- _<_ _≥_ _>_ _≰_ _≱_ _≮_ _≯_
+infix 4 _≤_ _<_ _≥_ {- _>_ -} _≰_ {- _≱_ _≮_ _≯_ -}
 infix  8 1/_ _/2
 infixl 7 _*_
 infixl 6 _+_
@@ -459,3 +465,20 @@ nn+pos q r 0≤q .positive =
 
 q≤nn+pos : ∀ q (r : ℚ⁺) → q ℚ.≤ q ℚ.+ fog r
 q≤nn+pos q r = ℚ.p≤p+q (ℚ.nonNegative (fog-nonneg r))
+
+------------------------------------------------------------------------------
+-- Square root (Babylonian method)
+
+step : ℚ⁺ → ℚ⁺ → ℚ⁺
+step s x = (x + s * 1/ x) /2
+
+iterate : ∀ {A : Set} → ℕ → (A → A) → A → A
+iterate zero    f a = a
+iterate (suc n) f a = iterate n f (f a)
+
+2ℚ⁺ = 1ℚ⁺ + 1ℚ⁺
+
+{-
+_ : ℚ⁺
+_ = {!iterate 8 (step 2ℚ⁺) 1ℚ⁺ .rational!}
+-}

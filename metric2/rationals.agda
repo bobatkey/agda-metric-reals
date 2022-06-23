@@ -5,6 +5,7 @@ module metric2.rationals where
 open import Data.Product using (proj₁; proj₂; _,_; Σ-syntax)
 open import Data.Rational.Unnormalised as ℚ using () renaming (ℚᵘ to ℚ; 0ℚᵘ to 0ℚ; 1ℚᵘ to 1ℚ)
 import Data.Rational.Unnormalised.Properties as ℚ
+open import Data.Sum using (inj₁; inj₂)
 open import metric2.base
 open import upper-reals
 
@@ -149,6 +150,38 @@ add-inverse .f≈f q = ℚspc-≈ (ℚ.+-inverseʳ q)
 
 
 ------------------------------------------------------------------------------
+-- binary max
+
+open import metric2.product
+
+max : (ℚspc ×ₘ ℚspc) ⇒ ℚspc
+max .fun (x , y) = x ℚ.⊔ y
+max .non-expansive {x₁ , y₁}{x₂ , y₂} = {!!}
+
+{-   ((x₁ ⊔ y₁) - (x₂ ⊔ y₂)) ⊔ ((x₂ ⊔ y₂) - (x₁ ⊔ y₁))
+    ≤
+     | x₁ - x₂ | ⊔ | y₁ - y₂ |
+    ≃
+     (x₁ - x₂) ⊔ (x₂ - x₁) ⊔ (y₁ - y₂) ⊔ (y₂ - y₁)
+
+-}
+
+
+
+{-  | x₁ ⊔ y₁ - x₂ ⊔ y₂ |
+  ≤
+    | x₁ - x₂ | + | y₁ - y₂ |
+
+  if x₁ ≤ y₁ then
+    Goal: | y₁ - x₂ ⊔ y₂ | ≤ | x₁ - x₂ | + | y₁ - y₂ |
+    if x₂ ≤ y₂ then
+      Goal: | y₁ - y₂ | ≤ | x₁ - x₂ | + | y₁ - y₂ |
+      ok
+    else
+      Goal: | y₁ - x₂ | ≤
+-}
+
+------------------------------------------------------------------------------
 -- Multiplication by a "scalar"
 
 -- FIXME: make this work for any q : ℚ; need scaling to work for non-negative rationals
@@ -240,9 +273,9 @@ add-inverse .f≈f q = ℚspc-≈ (ℚ.+-inverseʳ q)
   ∎
   where open ≤-Reasoning
 
-forget : ∀ b → ℚspc[ b ] ⇒ ℚspc
-forget b .fun (q , _) = q
-forget b .non-expansive = ≤-refl
+unbound : ∀ b → ℚspc[ b ] ⇒ ℚspc
+unbound b .fun (q , _) = q
+unbound b .non-expansive = ≤-refl
 
 open import Data.Sum using (inj₁; inj₂)
 
@@ -276,21 +309,73 @@ open import Relation.Nullary
 clamp-value : ℚ → ℚ⁺ → ℚ
 clamp-value q b = (q ℚ.⊔ ℚ.- ℚ⁺.fog b) ℚ.⊓ ℚ⁺.fog b
 
-  -- clamp-tri : ∀ q b → clamp-value q b ℚ.≃
+module clamping where
 
--- FIXME: finish this proof
-clamp : ∀ b → ℚspc ⇒ ℚspc[ b ]
-clamp b .fun q =
-  clamp-value q b ,
-  lemma (clamp-value q b) b
-    (ℚ.⊓-glb (ℚ.p≤q⊔p q (ℚ.- ℚ⁺.fog b))
-              (lemma2 (ℚ⁺.fog b) (ℚ⁺.fog-nonneg b)))
-    (ℚ.p≤q⇒r⊓p≤q (q ℚ.⊔ (ℚ.- (ℚ⁺.fog b))) ℚ.≤-refl)
-  where open ℚ.≤-Reasoning
-clamp b .non-expansive {q₁}{q₂} = {!!}
-  where open ℚ.≤-Reasoning
+  open import Relation.Binary.PropositionalEquality using (refl)
 
+  data ClampView (b : ℚ⁺) (q : ℚ) : Set where
+    lower  : q ℚ.≤ ℚ.- ℚ⁺.fog b  → ClampView b q
+    within : ℚ.∣ q ∣ ℚ.≤ ℚ⁺.fog b → ClampView b q
+    higher : ℚ⁺.fog b ℚ.≤ q      → ClampView b q
 
+  clamp-view : ∀ b q → ClampView b q
+  clamp-view b q with ℚ⁺.fog b ℚ.≤? q
+  ... | yes b≤q = higher b≤q
+  ... | no ¬b≤q with q ℚ.≤? ℚ.- ℚ⁺.fog b
+  ... | yes q≤-b = lower q≤-b
+  ... | no ¬q≤-b with ℚ.∣p∣≡p∨∣p∣≡-p q
+  ... | inj₁ ∣q∣≡q =
+    within (begin
+       ℚ.∣ q ∣
+     ≡⟨ ∣q∣≡q ⟩
+       q
+     <⟨ ℚ.≰⇒> ¬b≤q ⟩
+       ℚ⁺.fog b
+    ∎)
+    where open ℚ.≤-Reasoning
+  ... | inj₂ ∣q∣≡-q =
+    within (begin
+       ℚ.∣ q ∣
+     ≡⟨ ∣q∣≡-q ⟩
+       ℚ.- q
+     <⟨ ℚ.neg-mono-< (ℚ.≰⇒> ¬q≤-b) ⟩
+       ℚ.- ℚ.- ℚ⁺.fog b
+     ≈⟨ ℚ.neg-involutive (ℚ⁺.fog b) ⟩
+       ℚ⁺.fog b
+     ∎)
+     where open ℚ.≤-Reasoning
+
+  clamp-v : ℚ⁺ → ℚ → ℚ
+  clamp-v b q with clamp-view b q
+  ... | lower _  = ℚ.- ℚ⁺.fog b
+  ... | within _ = q
+  ... | higher _ = ℚ⁺.fog b
+
+  clamp-lemma : ∀ b q → ℚ.∣ clamp-v b q ∣ ℚ.≤ ℚ⁺.fog b
+  clamp-lemma b q with clamp-view b q
+  ... | lower q≤-b = begin ℚ.∣ ℚ.- ℚ⁺.fog b ∣ ≈⟨ ℚ.∣-p∣≃∣p∣ (ℚ⁺.fog b) ⟩ ℚ.∣ ℚ⁺.fog b ∣ ≈⟨ ℚ⁺.∣-∣-fog b ⟩ ℚ⁺.fog b ∎
+    where open ℚ.≤-Reasoning
+  ... | within ∣q∣≤b = ∣q∣≤b
+  ... | higher b≤q  = begin ℚ.∣ ℚ⁺.fog b ∣ ≈⟨ ℚ⁺.∣-∣-fog b ⟩ ℚ⁺.fog b ∎
+    where open ℚ.≤-Reasoning
+
+{-
+  clamp : ∀ b → ℚspc ⇒ ℚspc[ b ]
+  clamp b .fun q = clamp-v b q , clamp-lemma b q
+  clamp b .non-expansive {q₁}{q₂} with clamp-view b q₁
+  clamp b .non-expansive {q₁}{q₂} | lower q₁≤-b with clamp-view b q₂
+  clamp b .non-expansive {q₁}{q₂} | lower q₁≤-b | lower q₂≤-b  = {!!}
+  clamp b .non-expansive {q₁}{q₂} | lower q₁≤-b | within ∣q₂∣≤b = {!!}
+  clamp b .non-expansive {q₁}{q₂} | lower q₁≤-b | higher b≤q₂  = {!!}
+  clamp b .non-expansive {q₁}{q₂} | within ∣q₁∣≤b with clamp-view b q₂
+  clamp b .non-expansive {q₁}{q₂} | within ∣q₁∣≤b | lower q₂≤-b  = {!!}
+  clamp b .non-expansive {q₁}{q₂} | within ∣q₁∣≤b | within ∣q₂∣≤b = ≤-refl
+  clamp b .non-expansive {q₁}{q₂} | within ∣q₁∣≤b | higher b≤q₂  = {!!}
+  clamp b .non-expansive {q₁}{q₂} | higher b≤q₁ with clamp-view b q₂
+  clamp b .non-expansive {q₁}{q₂} | higher b≤q₁ | lower q₂≤-b  = {!!}
+  clamp b .non-expansive {q₁}{q₂} | higher b≤q₁ | within ∣q₂∣≤b = {!!}
+  clamp b .non-expansive {q₁}{q₂} | higher b≤q₁ | higher b≤q₂  = {!!}
+-}
 
 ------------------------------------------------------------------------------
 -- Multiplication

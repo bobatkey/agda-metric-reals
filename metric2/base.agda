@@ -3,6 +3,7 @@
 module metric2.base where
 
 open import Level using (0ℓ)
+open import Data.Product using (_,_)
 open import Relation.Binary using (IsEquivalence; Setoid)
 open import upper-reals hiding (isEquivalence)
 
@@ -39,6 +40,12 @@ record MSpc : Set₁ where
 
   setoid : Setoid 0ℓ 0ℓ
   setoid = record { isEquivalence = isEquivalence }
+
+  sym-eq : ∀ {x y} → dist x y ≃ dist y x
+  sym-eq = sym , sym
+
+  refl-0 : ∀ {x} → dist x x ≃ 0ℝ
+  refl-0 = refl , 0-least _
 
 -- non-expansive functions
 record _⇒_ (X Y : MSpc) : Set where

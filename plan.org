@@ -1,12 +1,15 @@
 #+STARTUP: indent
 
-* Plan [0/2]
+* Plan [0/3]
 - [ ] Rearrange files into a stdlib-like hierarchy
   - [ ] qpos -> Data.Rational.Positive ???
   - [ ] CommutativeSemigroupSolver -> Algebra.
-  - [ ] upper-reals -> Data.Real.Upper
+  - [ ] upper-reals -> Data.Real.UpperExtendee
 - [ ] Use Function.Metric.Rational
-- [ ]
+- [ ] Finish bounding of rationals so can do multiplication
+- [ ] Maximum and minimum of rationals as non-expansive functions
+- [ ] Define ordering on rationals and reals using max
+- [ ] interface with agda-categories
 
 
 * Related work
