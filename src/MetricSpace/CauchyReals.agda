@@ -1,23 +1,23 @@
 {-# OPTIONS --without-K --allow-unsolved-metas #-}
 
-module metric2.reals where
+module MetricSpace.CauchyReals where
 
 open import Level using (0ℓ)
-open import metric2.base
-open metric2.base.category
-open import metric2.completion renaming (map to 𝒞-map; unit to 𝒞-unit; map-cong to 𝒞-map-cong; map-∘ to 𝒞-map-∘; map-id to 𝒞-map-id)
-open import metric2.rationals
-open import metric2.monoidal
-open import metric2.terminal
-open import metric2.scaling
-open import qpos as ℚ⁺ using (ℚ⁺)
+open import MetricSpace
+open MetricSpace.category
+open import MetricSpace.Completion renaming (map to 𝒞-map; unit to 𝒞-unit; map-cong to 𝒞-map-cong; map-∘ to 𝒞-map-∘; map-id to 𝒞-map-id)
+open import MetricSpace.Rationals
+open import MetricSpace.MonoidalProduct
+open import MetricSpace.Terminal
+open import MetricSpace.Scaling
+open import Data.Rational.Unnormalised.Positive as ℚ⁺ using (ℚ⁺)
 open import Algebra
 open import Data.Product using (_,_; Σ-syntax)
 open import Data.Rational.Unnormalised as ℚ using () renaming (ℚᵘ to ℚ)
 import Data.Rational.Unnormalised.Properties as ℚ
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Unit using (tt)
-open import upper-reals as ℝᵘ using (ℝᵘ)
+open import Data.Real.UpperClosed as ℝᵘ using (ℝᵘ)
 open import Relation.Nullary
 open import Relation.Binary using (IsEquivalence; Setoid)
 --open import Relation.Binary using (tri<; tri≈; tri>)
@@ -485,7 +485,7 @@ get-bound r =
 
 bound : ℝ → Σ[ q ∈ ℚ⁺ ] ℝ[ q ]
 bound r .proj₁ = get-bound r
-bound r .proj₂ = 𝒞-map (clamping.clamp (get-bound r)) ._⇒_.fun r
+bound r .proj₂ = {!!} -- 𝒞-map (clamping.clamp (get-bound r)) ._⇒_.fun r
 
 open _⇒_
 

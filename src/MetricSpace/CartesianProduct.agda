@@ -1,10 +1,10 @@
 {-# OPTIONS --safe --without-K #-}
 
-module metric2.product where
+module MetricSpace.CartesianProduct where
 
 open import Data.Product using (_,_; _×_)
-open import metric2.base
-open import upper-reals
+open import MetricSpace
+open import Data.Real.UpperClosed
 
 open MSpc
 open _⇒_

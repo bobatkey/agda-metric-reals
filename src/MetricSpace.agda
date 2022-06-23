@@ -1,11 +1,11 @@
 {-# OPTIONS --without-K --safe #-}
 
-module metric2.base where
+module MetricSpace where
 
 open import Level using (0ℓ)
 open import Data.Product using (_,_)
 open import Relation.Binary using (IsEquivalence; Setoid)
-open import upper-reals hiding (isEquivalence)
+open import Data.Real.UpperClosed
 
 record MSpc : Set₁ where
   no-eta-equality

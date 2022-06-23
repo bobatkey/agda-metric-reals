@@ -1,13 +1,13 @@
 {-# OPTIONS --without-K --allow-unsolved-metas #-}
 
-module metric2.rationals where
+module MetricSpace.Rationals where
 
 open import Data.Product using (proj₁; proj₂; _,_; Σ-syntax)
 open import Data.Rational.Unnormalised as ℚ using () renaming (ℚᵘ to ℚ; 0ℚᵘ to 0ℚ; 1ℚᵘ to 1ℚ)
 import Data.Rational.Unnormalised.Properties as ℚ
 open import Data.Sum using (inj₁; inj₂)
-open import metric2.base
-open import upper-reals
+open import MetricSpace
+open import Data.Real.UpperClosed
 
 open MSpc
 open _⇒_
@@ -82,11 +82,11 @@ private
   ∎
   where open ≤-Reasoning
 
-open import metric2.monoidal
-open import metric2.terminal
-open import metric2.internal-hom
-open import qpos as ℚ⁺ using (ℚ⁺)
-open metric2.base.category
+open import MetricSpace.MonoidalProduct
+open import MetricSpace.Terminal
+open import MetricSpace.InternalHom
+open import Data.Rational.Unnormalised.Positive as ℚ⁺ using (ℚ⁺)
+open MetricSpace.category
 
 const : ℚ → ⊤ₘ ⇒ ℚspc
 const q .fun _ = q
@@ -129,7 +129,7 @@ add-assoc .f≈f (a , (b , c)) = ℚspc-≈ (ℚ.+-assoc a b c)
 
 ------------------------------------------------------------------------------
 -- Negation, so we have a (graded) abelian group object
-open import metric2.scaling
+open import MetricSpace.Scaling
 
 negate : ℚspc ⇒ ℚspc
 negate .fun a = ℚ.- a
@@ -152,7 +152,7 @@ add-inverse .f≈f q = ℚspc-≈ (ℚ.+-inverseʳ q)
 ------------------------------------------------------------------------------
 -- binary max
 
-open import metric2.product
+open import MetricSpace.CartesianProduct
 
 max : (ℚspc ×ₘ ℚspc) ⇒ ℚspc
 max .fun (x , y) = x ℚ.⊔ y

@@ -1,12 +1,12 @@
 {-# OPTIONS --without-K --safe #-}
 
-module metric2.monoidal where
+module MetricSpace.MonoidalProduct where
 
 open import Data.Product using (_×_; _,_)
 open import Data.Unit using (tt)
-open import metric2.base
-open import metric2.terminal
-open import upper-reals
+open import MetricSpace
+open import MetricSpace.Terminal
+open import Data.Real.UpperClosed
 
 open MSpc
 open _⇒_
@@ -91,7 +91,7 @@ open category
 ------------------------------------------------------------------------------
 -- From this product to the cartesian one. This could be derived from
 -- relationships between the norms used to define them.
-open import metric2.product
+open import MetricSpace.CartesianProduct
 
 ⊗⇒× : ∀ {X Y} → (X ⊗ Y) ⇒ (X ×ₘ Y)
 ⊗⇒× .fun xy = xy

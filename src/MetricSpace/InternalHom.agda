@@ -1,11 +1,11 @@
 {-# OPTIONS --without-K --safe #-}
 
-module metric2.internal-hom where
+module MetricSpace.InternalHom where
 
 open import Data.Product using (_,_)
-open import metric2.base
-open import metric2.monoidal
-open import upper-reals
+open import MetricSpace
+open import MetricSpace.MonoidalProduct
+open import Data.Real.UpperClosed
 
 open MSpc
 open _⇒_
@@ -57,7 +57,7 @@ _⊸_ : MSpc → MSpc → MSpc
   ∎
   where open ≤-Reasoning
 
-open metric2.base.category
+open MetricSpace.category
 
 eval : ∀ {X Y} → ((X ⊸ Y) ⊗ X) ⇒ Y
 eval = Λ⁻¹ id

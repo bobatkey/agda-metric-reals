@@ -1,10 +1,10 @@
 {-# OPTIONS --without-K --safe #-}
 
-module metric2.terminal where
+module MetricSpace.Terminal where
 
 open import Data.Unit using (⊤; tt)
-open import metric2.base
-open import upper-reals
+open import MetricSpace
+open import Data.Real.UpperClosed
 
 open MSpc
 open _⇒_

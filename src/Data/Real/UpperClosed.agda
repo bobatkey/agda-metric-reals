@@ -1,6 +1,6 @@
 {-# OPTIONS --without-K --safe #-}
 
-module upper-reals where
+module Data.Real.UpperClosed where
 
 open import Level using (0ℓ; suc)
 open import Algebra using (IsMagma;
@@ -24,7 +24,7 @@ open import Relation.Binary using (Antisymmetric; Transitive; Reflexive; IsEquiv
                                    IsPreorder; IsPartialOrder; Poset;
                                    _Preserves₂_⟶_⟶_; _⇒_; _Respectsʳ_)
 
-open import qpos as ℚ⁺ using (ℚ⁺; _/2; 1/_)
+open import Data.Rational.Unnormalised.Positive as ℚ⁺ using (ℚ⁺; _/2; 1/_)
 
 module interchange {c ℓ} (G : CommutativeSemigroup c ℓ)  where
   open CommutativeSemigroup G
@@ -199,7 +199,7 @@ x # y = x < y ⊎ y < x
 -- Embedding (non negative) rationals
 
 module closedness where
-  open import qpos
+  open import Data.Rational.Unnormalised.Positive
   open import Relation.Binary.PropositionalEquality using (refl)
 
   2ℚ : ℚ
@@ -255,6 +255,7 @@ rational r .contains q = r ℚ.≤ ℚ⁺.fog q
 rational r .upper q₁≤q₂ r≤q₁ = ℚ.≤-trans r≤q₁ (ℚ⁺.fog-mono q₁≤q₂)
 rational r .closed {q} = closedness.closed' r q
 
+{-
 -- essentially this holds because closure is a monad, and we are
 -- taking the free algebra here.
 rational-alt : ℚ → ℝᵘ
@@ -269,6 +270,7 @@ rational-alt r .upper {q₁}{q₂} q₁≤q₂ r∈q₁ ε =
   ∎
   where open ℚ.≤-Reasoning
 rational-alt r .closed {ε} = {!!}
+-}
 
 ------------------------------------------------------------------------------
 -- Generic construction and proofs for binary operators
@@ -832,7 +834,7 @@ _⊝_ : ℝᵘ → ℝᵘ → ℝᵘ
   x .upper (ℚ⁺.+-mono-≤ ε₁≤ε₂ ℚ⁺.≤-refl) (h ε' y∋ε')
 (x ⊝ y) .closed {ε} h ε' y∋ε' =
   x .closed λ s → x .upper (ℚ⁺.≤-reflexive (eq s)) (h s ε' y∋ε')
-  where open import CommutativeSemigroupSolver (ℚ⁺.+-commutativeSemigroup)
+  where open import Algebra.Solver.CommutativeSemigroup (ℚ⁺.+-commutativeSemigroup)
         a = v# 0; b = v# 1; c = v# 2
         eq : ∀ s → ε ℚ⁺.+ s ℚ⁺.+ ε' ℚ⁺.≃ ε ℚ⁺.+ ε' ℚ⁺.+ s
         eq s = prove 3 ((a ⊕ b) ⊕ c) ((a ⊕ c) ⊕ b) (ε ∷ s ∷ ε' ∷ [])
@@ -860,7 +862,7 @@ _⊖_ : ℝᵘ → ℚ⁺ → ℝᵘ
 (x ⊖ r) .upper q₁≤q₂ = x .upper (ℚ⁺.+-mono-≤ q₁≤q₂ ℚ⁺.≤-refl)
 (x ⊖ r) .closed {q} h =
   x .closed (λ s → x .upper (ℚ⁺.≤-reflexive (prove 3 ((a ⊕ b) ⊕ c) ((a ⊕ c) ⊕ b) (q ∷ s ∷ r ∷ []))) (h s))
-  where open import CommutativeSemigroupSolver (ℚ⁺.+-commutativeSemigroup)
+  where open import Algebra.Solver.CommutativeSemigroup (ℚ⁺.+-commutativeSemigroup)
         a = v# 0; b = v# 1; c = v# 2
 
 ⊖-iso1 : ∀ {x q y} → (x ⊖ q) ≤ y → x ≤ (y + rational+ q)
@@ -1121,6 +1123,7 @@ _∸_ : ℝᵘ → ℝᵘ → ℝᵘ
 
 -- x ∸ y = ⋀{z | x ≤ y + z}   (approximated as rationals)
 
+{-
 residual-1' : ∀ {x y z} → (x ∸ y) ≤ z → x ≤ (y + z)
 residual-1' {x}{y}{z} x∸y≤z =
   begin
@@ -1131,6 +1134,7 @@ residual-1' {x}{y}{z} x∸y≤z =
     y + z
   ∎
   where open ≤-Reasoning
+-}
 
 residual-2' : ∀ {x y z} → x ≤ (y + z) → (x ∸ y) ≤ z
 residual-2' {x}{y}{z} x≤y+z =

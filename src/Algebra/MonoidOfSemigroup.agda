@@ -3,7 +3,7 @@
 open import Level using (_⊔_)
 open import Algebra
 
-module MonoidOfSemigroup {m₁ m₂} (M : CommutativeSemigroup m₁ m₂) where
+module Algebra.MonoidOfSemigroup {m₁ m₂} (M : CommutativeSemigroup m₁ m₂) where
 
 open import Data.Product using (_,_)
 open import Relation.Binary

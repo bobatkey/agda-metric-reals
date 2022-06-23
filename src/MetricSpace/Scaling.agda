@@ -1,14 +1,14 @@
 {-# OPTIONS --without-K --safe #-}
 
-module metric2.scaling where
+module MetricSpace.Scaling where
 
 open import Data.Product using (_,_)
-open import metric2.base
-open import metric2.monoidal
-open import upper-reals
-import qpos as ℚ⁺
+open import MetricSpace
+open import MetricSpace.MonoidalProduct
+open import Data.Real.UpperClosed
+import Data.Rational.Unnormalised.Positive as ℚ⁺
 open ℚ⁺ using (ℚ⁺; 1ℚ⁺)
-open metric2.base.category
+open MetricSpace.category
 
 open MSpc
 open _⇒_

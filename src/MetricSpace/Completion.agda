@@ -1,12 +1,12 @@
 {-# OPTIONS --without-K --safe #-}
 
-module metric2.completion where
+module MetricSpace.Completion where
 
 open import Data.Product using (_×_; _,_; proj₁; proj₂; swap)
-import qpos as ℚ⁺
+import Data.Rational.Unnormalised.Positive as ℚ⁺
 open ℚ⁺ using (ℚ⁺; _/2; 1/_; 1ℚ⁺)
-open import metric2.base
-open import upper-reals
+open import MetricSpace
+open import Data.Real.UpperClosed
 
 open MSpc
 open _⇒_
@@ -110,7 +110,7 @@ map-cong {X}{Y}{f₁}{f₂} f₁≈f₂ .f≈f x =
   ∎
   where open ≤-Reasoning
 
-open metric2.base.category
+open MetricSpace.category
 
 map-id : ∀ {X} → map {X} id ≈f id
 map-id {X} .f≈f x = 𝒞 X .refl {x}
@@ -195,7 +195,7 @@ join-join {X} .f≈f x =
   ≤-trans (⊖-iso1 (≤-trans (sup-upper (ε₁ /2 /2 , ε₂ /2)) (⊖-iso1 (≤-trans (sup-upper (ε₁ /2 /2 , ε₂ /2 /2)) (x .regular (ε₁ /2) (ε₂ /2 /2)))))) (eq ε₁ ε₂)
   where
     open ≤-Reasoning
-    open import CommutativeSemigroupSolver (ℚ⁺.+-commutativeSemigroup)
+    open import Algebra.Solver.CommutativeSemigroup (ℚ⁺.+-commutativeSemigroup)
     a = v# 0; b = v# 1; c = v# 2; d = v# 3
     eq : ∀ ε₁ ε₂ → ((rational+ (ε₁ /2 ℚ⁺.+ (ε₂ /2) /2) + rational+ ((ε₁ /2) /2 ℚ⁺.+ (ε₂ /2) /2)) + rational+ ((ε₁ /2) /2 ℚ⁺.+ ε₂ /2)) ≤ rational+ (ε₁ ℚ⁺.+ ε₂)
     eq ε₁ ε₂ =
@@ -227,7 +227,7 @@ unit-join .f≈f x =
         ⊖-iso2 (≤-trans (⊖-iso1 (≤-trans (sup-upper (ε₁' /2 , ε₂')) (x .regular (ε₁' /2) ε₂))) (ineq ε₁ ε₂ ε₁' ε₂')) }) }
   where
     open ≤-Reasoning
-    open import CommutativeSemigroupSolver (ℚ⁺.+-commutativeSemigroup)
+    open import Algebra.Solver.CommutativeSemigroup (ℚ⁺.+-commutativeSemigroup)
     a = v# 0; b = v# 1; c = v# 2; d = v# 3
     ineq : ∀ ε₁ ε₂ ε₁' ε₂' → (rational+ (ε₁' /2 ℚ⁺.+ ε₂) + rational+ (ε₁' /2 ℚ⁺.+ ε₂')) ≤ ((0ℝ + rational+ (ε₁ ℚ⁺.+ ε₂)) + rational+ (ε₁' ℚ⁺.+ ε₂'))
     ineq ε₁ ε₂ ε₁' ε₂' =
@@ -254,8 +254,8 @@ unit-join .f≈f x =
 
 -- FIXME: is this true for any norm-product?
 
-open import metric2.monoidal
-open import metric2.terminal
+open import MetricSpace.MonoidalProduct
+open import MetricSpace.Terminal
 
 monoidal-⊗ : ∀ {X Y} → (𝒞 X ⊗ 𝒞 Y) ⇒ 𝒞 (X ⊗ Y)
 monoidal-⊗ .fun (x , y) .rfun ε = x .rfun (ε /2) , y .rfun (ε /2)
@@ -344,7 +344,7 @@ monoidal-assoc {X}{Y}{Z} .f≈f (x , (y , z)) =
       0ℝ + rational+ (ε₁ ℚ⁺.+ ε₂)
     ∎) }
   where open ≤-Reasoning
-        open import CommutativeSemigroupSolver (ℚ⁺.+-commutativeSemigroup)
+        open import Algebra.Solver.CommutativeSemigroup (ℚ⁺.+-commutativeSemigroup)
         a = v# 0; b = v# 1; c = v# 2; d = v# 3
 
 monoidal-symmetry : ∀ {X Y} →
@@ -429,7 +429,7 @@ monoidal-⊗⁻¹ .non-expansive = {!!}
 -}
 
 ------------------------------------------------------------------------------
-open import metric2.scaling
+open import MetricSpace.Scaling
 
 distr : ∀ {X} q → ![ q ] (𝒞 X) ⇒ 𝒞 (![ q ] X)
 distr {X} q .fun x .rfun ε = x .rfun (1/ q ℚ⁺.* ε)

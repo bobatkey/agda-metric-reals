@@ -2,7 +2,7 @@
 
 open import Algebra
 
-module CommutativeSemigroupSolver {m₁ m₂} (G : CommutativeSemigroup m₁ m₂) where
+module Algebra.Solver.CommutativeSemigroup {m₁ m₂} (G : CommutativeSemigroup m₁ m₂) where
 
 open import Data.Maybe as Maybe
 import Relation.Binary.PropositionalEquality as PropositionalEquality
@@ -14,7 +14,7 @@ open import Data.Vec using (_∷_; []) public
 open import Data.Vec.Properties using (lookup-map)
 open import Relation.Nullary.Decidable.Core using (True)
 
-import MonoidOfSemigroup (G) as M
+import Algebra.MonoidOfSemigroup (G) as M
 import Algebra.Solver.CommutativeMonoid
 module Solver = Algebra.Solver.CommutativeMonoid (M.⊕-u-commutativeMonoid)
 

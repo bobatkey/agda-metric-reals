@@ -1,6 +1,6 @@
 {-# OPTIONS --without-K --safe #-}
 
-module qpos where
+module Data.Rational.Unnormalised.Positive where
 
 open import Algebra using (Commutative; Associative;
                            Congruent₂; Congruent₁;
