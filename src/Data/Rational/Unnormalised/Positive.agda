@@ -11,7 +11,7 @@ open import Algebra using (Commutative; Associative;
                            IsMonoid; IsCommutativeMonoid; IsGroup; IsAbelianGroup; AbelianGroup)
 open import Level using (0ℓ)
 open import Data.Product using (Σ-syntax; _,_)
-open import Data.Nat as ℕ using (ℕ; zero; suc)
+open import Data.Nat as ℕ using (ℕ; zero; suc; NonZero)
 import Data.Nat.Properties as ℕ
 open import Data.Rational.Unnormalised as ℚ using (↥_) renaming (ℚᵘ to ℚ; 0ℚᵘ to 0ℚ; 1ℚᵘ to 1ℚ)
 import Data.Rational.Unnormalised.Properties as ℚ
@@ -45,31 +45,31 @@ gof q q>0 .positive = ℚ.positive q>0
 
 _+_ : ℚ⁺ → ℚ⁺ → ℚ⁺
 (q + r) .rational = q .rational ℚ.+ r .rational
-(q + r) .positive = ℚ.positive (ℚ.+-mono-< (ℚ.positive⁻¹ (q .positive)) (ℚ.positive⁻¹ (r .positive)))
+(q + r) .positive = ℚ.positive (ℚ.+-mono-< (ℚ.positive⁻¹ (q .rational) {{q .positive}}) (ℚ.positive⁻¹ (r .rational) {{r .positive}}))
 
 _*_ : ℚ⁺ → ℚ⁺ → ℚ⁺
 (q * r) .rational = q .rational ℚ.* r .rational
 (q * r) .positive =
     ℚ.positive (ℚ.≤-<-trans (ℚ.≤-reflexive (ℚ.≃-sym (ℚ.*-zeroʳ (q .rational))))
-                           (ℚ.*-monoʳ-<-pos {q .rational} (q .positive) (ℚ.positive⁻¹ {r .rational} (r .positive))))
+                           (ℚ.*-monoʳ-<-pos (q .rational) {{q .positive}} (ℚ.positive⁻¹ (r .rational) {{r .positive}})))
 
-positive⇒nonzero : ∀ {p} → ℚ.Positive p → ℤ.∣ ↥ p ∣ ℚ.≢0
-positive⇒nonzero {ℚ.mkℚᵘ (+_ (suc n)) denominator-1} +ve = tt
+positive⇒nonzero : ∀ {p} → ℚ.Positive p → ℕ.NonZero (ℤ.∣ ↥ p ∣)
+positive⇒nonzero {ℚ.mkℚᵘ (+_ (suc n)) denominator-1} +ve = _
 
-1/-positive : ∀ p → (+ve : ℚ.Positive p) → ℚ.Positive (ℚ.1/_ p {positive⇒nonzero {p} +ve})
-1/-positive (ℚ.mkℚᵘ (+_ (suc n)) d) tt = tt
+1/-positive : ∀ p → (+ve : ℚ.Positive p) → ℚ.Positive (ℚ.1/_ p {{positive⇒nonzero {p} +ve}})
+1/-positive (ℚ.mkℚᵘ (+_ (suc n)) d) _ = _ 
 
 1/_ : ℚ⁺ → ℚ⁺
-(1/ q) .rational = ℚ.1/_ (q .rational) {positive⇒nonzero {q .rational} (q .positive)}
+(1/ q) .rational = ℚ.1/_ (q .rational) {{positive⇒nonzero {q .rational} (q .positive)}}
 (1/ q) .positive = 1/-positive (q .rational) (q .positive)
 
 ½ : ℚ⁺
 ½ .rational = ℚ.½
-½ .positive = tt
+½ .positive = _
 
 1ℚ⁺ : ℚ⁺
 1ℚ⁺ .rational = 1ℚ
-1ℚ⁺ .positive = tt
+1ℚ⁺ .positive = _
 
 _/2 : ℚ⁺ → ℚ⁺
 q /2 = ½ * q
@@ -151,9 +151,13 @@ x ≥ y = y ≤ x
 ≤-<-trans : Trans _≤_ _<_ _<_
 ≤-<-trans (r≤r i≤j) (r<r j<k) = r<r (ℚ.≤-<-trans i≤j j<k)
 
+<-asym : {p q : ℚ⁺} -> p < q -> ¬ q < p
+<-asym {p} {q} (r<r p<q) (r<r qᵣ<ꟴpᵣ) =  ℚ.<-asym {p .rational} {q .rational} p<q qᵣ<ꟴpᵣ
+
 module ≤-Reasoning where
   open import Relation.Binary.Reasoning.Base.Triple
     ≤-isPreorder
+    <-asym
     <-trans
     <-resp-≃
     <⇒≤
@@ -232,7 +236,8 @@ q ⊔ r with q ≤? r
 +-mono-≤ (r≤r x≤y) (r≤r u≤v) = r≤r (ℚ.+-mono-≤ x≤y u≤v)
 
 +-increasing : ∀ {q r} → q ≤ q + r
-+-increasing {q}{r} = r≤r (ℚ.p≤p+q {q .rational}{r .rational} (ℚ.positive⇒nonNegative {r .rational} (r .positive)))
++-increasing {q}{r}
+  = r≤r (ℚ.p≤p+q (q .rational) (r .rational) {{ℚ.pos⇒nonNeg (r .rational) {{r .positive}}}})
 
 -- private
 --   blah : ∀ {q r} → q ℚ.≠ r → q ℚ.≤ r → q ℚ.< r
@@ -259,13 +264,13 @@ postulate -- FIXME
 
 *-mono-≤ : _*_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
 *-mono-≤ {x}{y}{u}{v} (r≤r x≤y) (r≤r u≤v) =
-  r≤r (ℚ.≤-trans (ℚ.*-monoʳ-≤-pos {x .rational} (x .positive) u≤v)
-                 (ℚ.*-monoˡ-≤-pos (v .positive) x≤y))
+  r≤r (ℚ.≤-trans (ℚ.*-monoʳ-≤-nonNeg (x .rational) {{ℚ.pos⇒nonNeg (x .rational) {{x .positive}}}} u≤v)
+                 (ℚ.*-monoˡ-≤-nonNeg (v .rational) {{ℚ.pos⇒nonNeg (v .rational) {{v .positive}}}} x≤y))
 
 *-mono-< : _*_ Preserves₂ _<_ ⟶ _<_ ⟶ _<_
 *-mono-< {x}{y}{u}{v} (r<r x<y) (r<r u<v) =
-  r<r (ℚ.<-trans (ℚ.*-monoʳ-<-pos {x .rational} (x .positive) u<v)
-                 (ℚ.*-monoˡ-<-pos (v .positive) x<y))
+  r<r (ℚ.<-trans (ℚ.*-monoʳ-<-pos (x .rational) {{x .positive}} u<v)
+                 (ℚ.*-monoˡ-<-pos (v .rational) {{v .positive}} x<y))
 
 *-comm : Commutative _≃_ _*_
 *-comm q r = r≃r (ℚ.*-comm (q .rational) (r .rational))
@@ -292,7 +297,7 @@ postulate -- FIXME
 -- Properties of 1/
 
 1/-cong : Congruent₁ _≃_ 1/_
-1/-cong {⟨ ℚ.mkℚᵘ (+_ (suc n₁)) d₁ , tt ⟩} {⟨ ℚ.mkℚᵘ (+_ (suc n₂)) d₂ , tt ⟩} (r≃r (ℚ.*≡* q₁≃q₂)) =
+1/-cong {⟨ ℚ.mkℚᵘ (+_ (suc n₁)) d₁ , _ ⟩} {⟨ ℚ.mkℚᵘ (+_ (suc n₂)) d₂ , _ ⟩} (r≃r (ℚ.*≡* q₁≃q₂)) =
   r≃r (ℚ.*≡* (begin
                  + suc d₁ ℤ.* + suc n₂ ≡⟨ ℤ.*-comm (+ suc d₁) (+ suc n₂) ⟩
                  + suc n₂ ℤ.* + suc d₁ ≡⟨ sym (q₁≃q₂) ⟩
@@ -303,10 +308,11 @@ postulate -- FIXME
   open ≡-Reasoning
 
 *-inverseˡ : LeftInverse _≃_ 1ℚ⁺ 1/_ _*_
-*-inverseˡ q = r≃r (ℚ.*-inverseˡ (q .rational) {positive⇒nonzero {q .rational} (q .positive)})
+*-inverseˡ q = r≃r (ℚ.*-inverseˡ (q .rational) {{positive⇒nonzero {q .rational} (q .positive)}})
+--*-inverseˡ : ∀ p .{{_ : NonZero p}} → (1/ p) * p ≃ 1ℚᵘ
 
 *-inverseʳ : RightInverse _≃_ 1ℚ⁺ 1/_ _*_
-*-inverseʳ q = r≃r (ℚ.*-inverseʳ (q .rational) {positive⇒nonzero {q .rational} (q .positive)})
+*-inverseʳ q = r≃r (ℚ.*-inverseʳ (q .rational) {{positive⇒nonzero {q .rational} (q .positive)}})
 
 *-inverse : Inverse _≃_ 1ℚ⁺ 1/_ _*_
 *-inverse = *-inverseˡ , *-inverseʳ
@@ -317,7 +323,7 @@ postulate -- FIXME
     1/ r
   ≈⟨ ≃-sym (*-identityˡ (1/ r)) ⟩
     1ℚ⁺ * 1/ r
-  ≈⟨ ≃-sym (*-cong (*-inverseˡ q) ≃-refl) ⟩
+  ≈⟨ ≃-sym (*-cong {_} {_} {1/ r} (*-inverseˡ q) ≃-refl) ⟩
     (1/ q * q) * 1/ r
   ≤⟨ *-mono-≤ (*-mono-≤ (≤-refl {1/ q}) q≤r) (≤-refl {1/ r}) ⟩
     (1/ q * r) * 1/ r
@@ -400,7 +406,7 @@ half-≤ q =
     q /2
       ≈⟨ ≃-refl ⟩
     ½ * q
-      ≤⟨ *-mono-≤ {½} {1ℚ⁺} (r≤r (ℚ.*≤* (ℤ.+≤+ (ℕ.s≤s ℕ.z≤n)))) ≤-refl ⟩
+      ≤⟨ *-mono-≤ {½} {1ℚ⁺} {q} (r≤r (ℚ.*≤* (ℤ.+≤+ (ℕ.s≤s ℕ.z≤n)))) ≤-refl ⟩
     1ℚ⁺ * q
       ≈⟨ *-identityˡ q ⟩
     q
@@ -411,7 +417,8 @@ half-≤ q =
 -- fog gof properties
 
 fog-positive : ∀ q → 0ℚ ℚ.< fog q
-fog-positive q = ℚ.positive⁻¹ (q .positive)
+fog-positive q = ℚ.positive⁻¹ (q .rational) {{q .positive}}
+--positive⁻¹ : ∀ p → .{{Positive p}} → p > 0ℚᵘ
 
 fog-nonneg : ∀ q → 0ℚ ℚ.≤ fog q
 fog-nonneg q = ℚ.<⇒≤ (fog-positive q)
@@ -431,8 +438,9 @@ fog-mono (r≤r e) = e
 *-fog : ∀ q r → fog (q * r) ℚ.≃ fog q ℚ.* fog r
 *-fog q r = ℚ.*≡* refl
 
-1/-fog : ∀ q q≢0 → ℚ.1/_ (fog q) {q≢0} ℚ.≃ fog (1/ q)
+1/-fog : ∀ q q≢0 → ℚ.1/_ (fog q) {{q≢0}} ℚ.≃ fog (1/ q)
 1/-fog q q≢0 = ℚ.*≡* refl
+-- 1/_ : (p : ℚᵘ) → .{{_ : NonZero p}} → ℚᵘ
 
 ∣-∣-fog : ∀ q → ℚ.∣ fog q ∣ ℚ.≃ fog q
 ∣-∣-fog q = ℚ.0≤p⇒∣p∣≃p (fog-nonneg q)
@@ -450,7 +458,11 @@ fromℕ n = ℚ.mkℚᵘ (+ n) 0
 
 floor-lower : ∀ q → fromℕ (floor q) ℚ.≤ fog q
 floor-lower ⟨ ℚ.mkℚᵘ (+ n) d-1 , _ ⟩ =
-  ℚ.*≤* (ℤ.≤-trans (ℤ.≤-reflexive (ℤ.+◃n≡+n _)) (ℤ.≤-trans (ℤ.+≤+ (ℕ.≤-trans (m/n*n≤m n (suc d-1)) (ℕ.≤-reflexive (sym (ℕ.*-identityʳ n))))) (ℤ.≤-reflexive (sym (ℤ.+◃n≡+n _)))))
+  ℚ.*≤*
+    (ℤ.≤-trans (ℤ.≤-reflexive (ℤ.+◃n≡+n _))
+      (ℤ.≤-trans (ℤ.+≤+ (ℕ.≤-trans (m/n*n≤m n (suc d-1))
+        (ℕ.≤-reflexive (sym (ℕ.*-identityʳ n)))))
+      (ℤ.≤-reflexive (sym (ℤ.+◃n≡+n _)))))
 
 -- floor-upper : ∀ q → fog q ℚ.< fromℕ (suc (floor q))
 -- floor-upper ⟨ ℚ.mkℚᵘ (+ n) d-1 , _ ⟩ = ℚ.*<* {!!}
@@ -461,10 +473,10 @@ nn+pos q r 0≤q .rational = q ℚ.+ fog r
 nn+pos q r 0≤q .positive =
   ℚ.positive (ℚ.≤-<-trans (ℚ.≤-reflexive (ℚ.≃-sym (ℚ.+-identityʳ 0ℚ)))
              (ℚ.≤-<-trans (ℚ.+-monoˡ-≤ 0ℚ 0≤q)
-                          (ℚ.+-monoʳ-< q (ℚ.positive⁻¹ (r .positive)))))
+                          (ℚ.+-monoʳ-< q (ℚ.positive⁻¹ (r .rational) {{r .positive}}))))
 
 q≤nn+pos : ∀ q (r : ℚ⁺) → q ℚ.≤ q ℚ.+ fog r
-q≤nn+pos q r = ℚ.p≤p+q (ℚ.nonNegative (fog-nonneg r))
+q≤nn+pos q r = ℚ.p≤p+q q (r .rational) {{ℚ.nonNegative (fog-nonneg r)}}
 
 ------------------------------------------------------------------------------
 -- Square root (Babylonian method)

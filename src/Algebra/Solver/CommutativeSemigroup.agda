@@ -12,7 +12,10 @@ open import Data.Fin using (Fin; #_)
 open import Data.Vec as Vec using (Vec)
 open import Data.Vec using (_∷_; []) public
 open import Data.Vec.Properties using (lookup-map)
-open import Relation.Nullary.Decidable.Core using (True)
+open import Relation.Nullary.Decidable.Core using (True; dec⇒maybe)
+
+open import Function.Base using (_∘_; _$_)
+import Relation.Binary.Reflection as Reflection
 
 import Algebra.MonoidOfSemigroup (G) as M
 import Algebra.Solver.CommutativeMonoid
@@ -21,7 +24,9 @@ module Solver = Algebra.Solver.CommutativeMonoid (M.⊕-u-commutativeMonoid)
 open CommutativeSemigroup G using () renaming (_≈_ to _≈'_; Carrier to InnerCarrier; _∙_ to _∙'_)
 open CommutativeMonoid M.⊕-u-commutativeMonoid using (Carrier; _≈_; reflexive; setoid; _∙_; ∙-cong; refl; sym)
 open M using (`_; embedding) public
-open Solver using (Expr; ⟦_⟧; normalise; module R; ⟦_⟧⇓; _≟_)
+open Solver using (Expr; ⟦_⟧; normalise; ⟦_⟧⇓; _≟_)
+
+module R = Reflection setoid Solver.var ⟦_⟧ (⟦_⟧⇓ ∘ normalise) Solver.normalise-correct
 
 lift-env : ∀ {n} → Vec InnerCarrier n → Vec Carrier n
 lift-env = Vec.map (`_)
@@ -62,8 +67,8 @@ injective e₁ e₂ ρ embed-e₁≈embed-e₂ =
   where open import Relation.Binary.Reasoning.Setoid (setoid)
 
 prove′ : ∀ {n} (e₁ e₂ : Expr' n) → Maybe (∀ ρ → ⟦ e₁ ⟧' ρ ≈' ⟦ e₂ ⟧' ρ)
-prove′ e₁ e₂ =
-  Maybe.map lemma (decToMaybe (normalise (embed-expr e₁) ≟ normalise (embed-expr e₂)))
+prove′ {n} e₁ e₂ =
+  Maybe.map lemma (dec⇒maybe (normalise (embed-expr e₁) ≟ normalise (embed-expr e₂)))
   where
   open PropositionalEquality using (_≡_; cong)
   open PropositionalEquality.≡-Reasoning
